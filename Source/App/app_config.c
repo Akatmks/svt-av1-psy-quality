@@ -225,6 +225,8 @@
 
 #define SPY_RD_TOKEN "--spy-rd"
 #define LOW_Q_TAPER_TOKEN "--low-q-taper"
+#define CHROMA_DISTORTION_TAPER_TOKEN "--chroma-distortion-taper"
+#define SKIP_TAPER_TOKEN "--skip-taper"
 #define SHARP_TX_TOKEN "--sharp-tx"
 #define HBD_MDS_TOKEN "--hbd-mds"
 #define COMPLEX_HVS_TOKEN "--complex-hvs"
@@ -232,6 +234,9 @@
 #define LUMINANCE_QP_BIAS_TOKEN "--luminance-qp-bias"
 #define FILTERING_NOISE_DETECTION_TOKEN "--filtering-noise-detection"
 #define AC_BIAS_TOKEN "--ac-bias"
+#define TF_NOISE_THR_TOKEN "--tf-noise-thr"
+#define CHROMA_GRAIN_TOKEN "--chroma-grain"
+#define ALT_TF_DECAY_TOKEN "--alt-tf-decay"
 
 static EbErrorType validate_error(EbErrorType err, const char *token, const char *value) {
     switch (err) {
@@ -1107,7 +1112,7 @@ ConfigEntry config_entry_specific[] = {
     // --- start: ALTREF_FILTERING_SUPPORT
     {SINGLE_INPUT,
      ENABLE_TF_TOKEN,
-     "Enable ALT-REF (temporally filtered) frames, default is 1 [0-2]",
+     "Enable ALT-REF (temporally filtered) frames, default is 1 [0-4]",
      set_cfg_generic_token},
 
     {SINGLE_INPUT,
@@ -1342,6 +1347,14 @@ ConfigEntry config_entry_psy[] = {
      "Low q taper. If macroblocks are boosted below q11, taper the effect. Default is 0 (off).",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     CHROMA_DISTORTION_TAPER_TOKEN,
+     "[PSY] Chroma distortion taper, default is 0 [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     SKIP_TAPER_TOKEN,
+     "[PSY] Skip taper, default is 0 [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      SHARP_TX_TOKEN,
      "[PSY] Sharp transform optimization, default is 1; best used in combination with psy-rd [0-1]",
      set_cfg_generic_token},
@@ -1368,6 +1381,18 @@ ConfigEntry config_entry_psy[] = {
     {SINGLE_INPUT,
      AC_BIAS_TOKEN,
      "Strength of AC bias in rate distortion, default is 0.0 [0.0-8.0]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     TF_NOISE_THR_TOKEN,
+     "[EXP] Noise threshold for noise-adaptive TF, default is 17500",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     CHROMA_GRAIN_TOKEN,
+     "[EXP] Control whether chroma grain is applied when using film grain, default is 1 [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     ALT_TF_DECAY_TOKEN,
+     "[EXP] Apply Tune 0/3 alt-ref TF decay tweak to any tune, default is 0 [0-1]",
      set_cfg_generic_token},
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
@@ -1592,6 +1617,12 @@ ConfigEntry config_entry[] = {
 	// Low q taper
     {SINGLE_INPUT, LOW_Q_TAPER_TOKEN, "LowQTaper", set_cfg_generic_token},
 
+    // Chroma Distortion Taper
+    {SINGLE_INPUT, CHROMA_DISTORTION_TAPER_TOKEN, "ChromaDistortionTaper", set_cfg_generic_token},
+
+    // Skip Taper
+    {SINGLE_INPUT, SKIP_TAPER_TOKEN, "SkipTaper", set_cfg_generic_token},
+
     // Sharp TX
     {SINGLE_INPUT, SHARP_TX_TOKEN, "SharpTX", set_cfg_generic_token},
 
@@ -1612,6 +1643,15 @@ ConfigEntry config_entry[] = {
 
     // AC bias strength
     {SINGLE_INPUT, AC_BIAS_TOKEN, "AcBias", set_cfg_generic_token},
+
+    // Noise-adaptive TF threshold
+    {SINGLE_INPUT, TF_NOISE_THR_TOKEN, "TFNoiseThr", set_cfg_generic_token},
+
+    // Chroma grain
+    {SINGLE_INPUT, CHROMA_GRAIN_TOKEN, "ChromaGrain", set_cfg_generic_token},
+
+    // Alt TF decay
+    {SINGLE_INPUT, ALT_TF_DECAY_TOKEN, "AltTFDecay", set_cfg_generic_token},
 
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
