@@ -955,6 +955,16 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
     //     return_error = EB_ErrorBadParameter;
     // }
 
+    if (config->chroma_distortion_taper > 1) {
+        SVT_ERROR("Instance %u: chroma-distortion-taper must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+
+    if (config->skip_taper > 1) {
+        SVT_ERROR("Instance %u: skip-taper must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+
     if (config->sharp_tx > 1) {
         SVT_ERROR("Instance %u: sharp-tx must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -1154,6 +1164,8 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->kf_tf_strength                    = 1;
     config_ptr->noise_norm_strength               = 1;
     config_ptr->low_q_taper                       = 0;
+    config_ptr->chroma_distortion_taper           = 0;
+    config_ptr->skip_taper                        = 0;
     config_ptr->sharp_tx                          = 1;
     config_ptr->hbd_mds                           = 0;
     config_ptr->complex_hvs                       = 0;
@@ -1162,6 +1174,9 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->filtering_noise_detection         = 0;
     config_ptr->ac_bias                           = 0.0;
     config_ptr->tx_bias                           = 0;
+    config_ptr->tf_noise_thr                      = 17500;
+    config_ptr->chroma_grain                      = TRUE;
+    config_ptr->alt_tf_decay                      = FALSE;
     return return_error;
 }
 
@@ -1311,6 +1326,44 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                 SVT_INFO("SVT [config]: keyframe temporal filtering strength \t\t\t\t: %s\n",
                         "auto");
                 break;
+            case 3:
+                SVT_INFO("SVT [config]: noise-adaptive TF \t\t\t\t\t\t: on\n");
+                SVT_INFO("SVT [config]: noise-adaptive TF threshold \t\t\t\t\t: %d\n",
+                    config->tf_noise_thr);
+                    
+                if (config->noise_norm_strength < 1) {
+                    SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: %d\n",
+                            config->tf_strength);
+                } else {
+                    SVT_INFO("SVT [config]: temporal filtering strength / noise normalization strength \t: %d / %d\n",
+                            config->tf_strength,
+                            config->noise_norm_strength);
+                }
+                
+                if (config->kf_tf_strength > 0) {
+                    SVT_INFO("SVT [config]: keyframe temporal filtering strength \t\t\t\t: %d\n",
+                            config->kf_tf_strength);
+                }
+                break;
+            case 4:
+                SVT_INFO("SVT [config]: noise-adaptive TF \t\t\t\t\t\t: on (verbose)\n");
+                SVT_INFO("SVT [config]: noise-adaptive TF threshold \t\t\t\t\t: %d\n",
+                    config->tf_noise_thr);
+
+                if (config->noise_norm_strength < 1) {
+                    SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: %d\n",
+                            config->tf_strength);
+                } else {
+                    SVT_INFO("SVT [config]: temporal filtering strength / noise normalization strength \t: %d / %d\n",
+                            config->tf_strength,
+                            config->noise_norm_strength);
+                }
+
+                if (config->kf_tf_strength > 0) {
+                    SVT_INFO("SVT [config]: keyframe temporal filtering strength \t\t\t\t: %d\n",
+                            config->kf_tf_strength);
+                }
+                break;
             default:
                 if (config->enable_tf == 0 && config->noise_norm_strength < 1) {
                     // don't print anything
@@ -1335,6 +1388,14 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
 		if (config->low_q_taper) {
             SVT_INFO("SVT [config]: low Q taper \t\t\t\t\t\t\t: %s\n",
                     config->low_q_taper ? "on" : "off");
+        }
+        
+		if (config->chroma_distortion_taper) {
+            SVT_INFO("SVT [config]: chroma distortion taper \t\t\t\t\t: on\n");
+        }
+        
+		if (config->skip_taper) {
+            SVT_INFO("SVT [config]: skip taper \t\t\t\t\t\t\t: on\n");
         }
         
         switch (config->filtering_noise_detection) {
@@ -1363,6 +1424,13 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                          ? "full"
                          : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
         }
+        
+        if (!config->chroma_grain)
+            SVT_INFO("SVT [config]: chroma grain \t\t\t\t\t\t\t: disabled\n");
+
+        if (config->alt_tf_decay)
+            SVT_INFO("SVT [config]: alt TF decay \t\t\t\t\t\t\t: enabled\n");
+
     }
 #ifdef DEBUG_BUFFERS
     SVT_INFO("SVT [config]: INPUT / OUTPUT \t\t\t\t\t\t\t: %d / %d\n",
@@ -2215,6 +2283,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"input-depth", &config_struct->encoder_bit_depth},
         {"forced-max-frame-width", &config_struct->forced_max_frame_width},
         {"forced-max-frame-height", &config_struct->forced_max_frame_height},
+        {"tf-noise-thr", &config_struct->tf_noise_thr},
     };
     const size_t uint_opts_size = sizeof(uint_opts) / sizeof(uint_opts[0]);
 
@@ -2256,6 +2325,8 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"tf-strength", &config_struct->tf_strength},
         {"kf-tf-strength", &config_struct->kf_tf_strength},
         {"noise-norm-strength", &config_struct->noise_norm_strength},
+        {"chroma-distortion-taper", &config_struct->chroma_distortion_taper},
+        {"skip-taper", &config_struct->skip_taper},
         {"fast-decode", &config_struct->fast_decode},
         {"enable-tf", &config_struct->enable_tf},
         {"hbd-mds", &config_struct->hbd_mds},
@@ -2386,6 +2457,8 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"low-q-taper", &config_struct->low_q_taper},
         {"sharp-tx", &config_struct->sharp_tx},
         {"alt-ssim-tuning", &config_struct->alt_ssim_tuning},
+        {"chroma-grain", &config_struct->chroma_grain},
+        {"alt-tf-decay", &config_struct->alt_tf_decay},
     };
     const size_t bool_opts_size = sizeof(bool_opts) / sizeof(bool_opts[0]);
 

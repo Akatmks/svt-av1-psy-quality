@@ -1959,6 +1959,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.luminance_qp_bias = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.luminance_qp_bias;
         input_data.ac_bias = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.ac_bias;
         input_data.tx_bias = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.tx_bias;
+        input_data.chroma_grain = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.chroma_grain;
+        input_data.alt_tf_decay = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.alt_tf_decay;
         input_data.static_config = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config;
 
         EB_NEW(
@@ -5063,6 +5065,12 @@ static void copy_api_from_app(
     // Low Q taper
     scs->static_config.low_q_taper = config_struct->low_q_taper;
 
+    // Chroma distortion taper
+    scs->static_config.chroma_distortion_taper = config_struct->chroma_distortion_taper;
+
+    // Skip taper
+    scs->static_config.skip_taper = config_struct->skip_taper;
+
     // Sharp TX
     scs->static_config.sharp_tx = config_struct->sharp_tx;
 
@@ -5086,6 +5094,15 @@ static void copy_api_from_app(
     
     // TX bias
     scs->static_config.tx_bias = config_struct->tx_bias;
+
+    // Noise-adaptive TF threshold
+    scs->static_config.tf_noise_thr = config_struct->tf_noise_thr;
+
+    // Chroma grain
+    scs->static_config.chroma_grain = config_struct->chroma_grain;
+
+    // Alt TF decay
+    scs->static_config.alt_tf_decay = config_struct->alt_tf_decay;
 
     // Override settings for Still Picture tune
     if (scs->static_config.tune == 4) {

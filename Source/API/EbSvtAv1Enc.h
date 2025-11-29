@@ -713,7 +713,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /**
      * @brief Enable use of ALT-REF (temporally filtered) frames.
      *
-     * Default is 1. 0 = off, 1 = on, 2 = adaptive.
+     * Default is 1. 0 = off, 1 = on, 2 = adaptive, 3 = noise-adaptive on/off, 4 = noise-adaptive on/off with logs.
      */
     uint8_t enable_tf;
 
@@ -1068,6 +1068,21 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is 0. 0 = off, 1 = on.
      */
     Bool low_q_taper;
+    /**
+     * @brief Limit the chroma distortion prediction from dropping too low in full mode decision
+     * Min value is 0.
+     * Max value is 1.
+     * Default is 0.
+     */
+    uint8_t chroma_distortion_taper;
+
+    /**
+     * @brief Completely disable skip mode and skip (as defined in section 6.10.10 and 6.10.11)
+     * Min value is 0.
+     * Max value is 1.
+     * Default is 0.
+     */
+    uint8_t skip_taper;
 
     /**
      * @brief Enable sharp-tx, a toggle that enables much sharper transforms decisions for higher fidelity ouput,
@@ -1142,8 +1157,31 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     uint8_t tx_bias;
 
+     /**
+     * @brief Control for noise threshold on noise-adaptive TF
+     * Default is 17500
+     * (CDEF/restoration noise threshold is 15000 as reference)
+     */
+    uint32_t tf_noise_thr;
+    
+    /**
+     * @brief Control whether chroma grain is applied when using film grain
+     * 0: off
+     * 1: on
+     * Default is 1
+     */
+    Bool chroma_grain;
+
+    /**
+     * @brief Apply Tune 0/3 alt-ref TF decay tweak to any tune
+     * 0: off
+     * 1: on
+     * Default is 0
+     */
+    Bool alt_tf_decay;
+
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
-    uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - sizeof(int8_t) - sizeof(uint32_t) - 2 * sizeof(double)];
+    uint8_t padding[128 - 9 * sizeof(Bool) - 16 * sizeof(uint8_t) - sizeof(int8_t) - 2 * sizeof(uint32_t) - 2 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 
