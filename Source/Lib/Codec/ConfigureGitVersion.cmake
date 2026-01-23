@@ -26,7 +26,7 @@ if(Git_FOUND AND EXISTS "${GIT_ROOT_DIR}/.git")
     execute_process(COMMAND
         ${GIT_EXECUTABLE}  -C ${GIT_ROOT_DIR}
             describe
-            --tags --dirty --abbrev
+            --tags --dirty --abbrev=7
             --always --match "v[0-9].[0-9]*"
         RESULT_VARIABLE git_describe_status
         OUTPUT_VARIABLE git_describe_output

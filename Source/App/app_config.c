@@ -721,7 +721,7 @@ ConfigEntry config_entry_options[] = {
     {SINGLE_INPUT,
      PRESET_TOKEN,
      "Encoder preset, presets < 0 are for debugging. Higher presets means faster encodes, but with "
-     "a quality tradeoff, default is 10 [-1-13]",
+     "a quality tradeoff, default is 4 [-1-13]",
      set_cfg_generic_token},
 
     {SINGLE_INPUT,
@@ -2143,7 +2143,7 @@ int get_version(int argc, char *argv[]) {
 #endif
     if (find_token(argc, argv, VERSION_TOKEN, NULL))
         return 0;
-    printf("SVT-AV1-PSY %s (%s)\n", svt_av1_get_version(), debug_build ? "release" : "debug");
+    printf("5fish/SVT-AV1-PSY [main] %s (%s)\n", svt_av1_get_version(), debug_build ? "release" : "debug");
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
     printf("PSY Release: %s\n", svt_psy_get_version());
 #else

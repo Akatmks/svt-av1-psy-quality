@@ -1,8 +1,10 @@
 ## 5fish/SVT-AV1-PSY
 
-This fork is based on the unreleased [SVT-AV1-PSY 2.3.0-C](https://github.com/psy-ex/svt-av1-psy/tree/testing-2.3.0-C), and includes backports of changes and improvements made in 3.x versions of SVT-AV1-PSY and its continuations by the original developers, [SVT-AV1-PSYEX](https://github.com/BlueSwordM/svt-av1-psyex) and [SVT-AV1-HDR](https://github.com/juliobbv-p/svt-av1-hdr)* (currently excluding any HDR-specific changes.)
+This fork is based on the unreleased [SVT-AV1-PSY 2.3.0-C](https://github.com/psy-ex/svt-av1-psy/tree/testing-2.3.0-C), and includes backports of changes and improvements made in 3.x+ versions of SVT-AV1-PSY and its continuations by the original developers, [SVT-AV1-PSYEX](https://github.com/BlueSwordM/svt-av1-psyex) and [SVT-AV1-HDR](https://github.com/juliobbv-p/svt-av1-hdr)* (currently excluding any HDR-specific changes.)
 
-Please note that this fork may not be a 1-to-1 copy of changes made in 3.x, and may include additional features or changes that could potentially change, break, or fix certain behaviour.
+Additionally, some features have been ported from [SVT-AV1-Essential](https://github.com/nekotrix/SVT-AV1-Essential).
+
+Please note that this fork may not be a 1-to-1 copy of changes made in 3.x+, and may include additional features or changes that could potentially change, break, or fix certain behaviour.
 
 The primary branch is [main](https://github.com/5fish/svt-av1-psy/tree/main); experimental changes and additions will be hosted on [exp](https://github.com/5fish/svt-av1-psy/tree/exp).
 
@@ -126,14 +128,19 @@ This setting controls the noise detection algorithm that turns off CDEF/restorat
 
 (Re-)introduce keyframe placement via scene detection, for more accurate seeking and lower quality inconsistencies. The feature was tuned for the highest accuracy on SVT-AV1-Essential defaults following a [testing round](https://gist.github.com/nekotrix/a025a48448ce05c3af9bd162dda70f66). The default is 0.
 
+- `--min-keyint` *-1 to keyint* (**[From SVT-AV1-Essential](https://github.com/nekotrix/SVT-AV1-Essential)**)
+
+The minimum amount of frames before a new keyframe can be introduced by the SCD feature, which helps prevent cases of keyframes spamming. The default, -1, automatically sets a multiple of the mini-gop length as the minimum keyint. 0 disables all limitations on keyframe placement and is not recommended.
+
 - `--auto-tiling` *0 and 1* (**[From SVT-AV1-Essential](https://github.com/nekotrix/SVT-AV1-Essential)**)
 
 Automatically sets tiles appropriate for the source input resolution, which in turn improves decoding performance with minimal effect on efficiency. The feature was tuned following a [testing round](https://wiki.x266.mov/blog/svt-av1-fourth-deep-dive-p2#tiles). The default is 0.
 
 ### Modified Defaults
 
-SVT-AV1-PSY has different defaults than mainline SVT-AV1 in order to provide better visual fidelity out of the box. They include:
+5fish/SVT-AV1-PSY has different defaults than mainline SVT-AV1 in order to provide better visual fidelity out of the box. They include:
 
+- `--preset 4` by default.
 - Default 10-bit color depth when given a 10-bit input.
 - Disable film grain denoising by default, as it often harms visual fidelity. (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/8b39b41df9e07bbcdbd19ea618762c5db3353c03)**)
 - Default to Tune 2 (SSIM) instead of Tune 1 (PSNR), as it reliably outperforms Tune 1 perceptually & throughout trusted metrics.

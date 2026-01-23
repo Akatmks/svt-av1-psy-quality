@@ -1232,7 +1232,7 @@ static void obmc_trans_face_off(ModeDecisionCandidateBuffer *cand_bf, PictureCon
                                                                                   ctx->blk_geom->bheight_uv);
                     chroma_fast_distortion += (uint32_t)spatial_full_dist_type_fun(input_pic->buffer_cr,
                                                                                    input_cr_origin_in_index,
-                                                                                   input_pic->stride_cb,
+                                                                                   input_pic->stride_cr,
                                                                                    cand_bf->pred->buffer_cr,
                                                                                    (int32_t)cu_chroma_origin_index,
                                                                                    pred->stride_cr,

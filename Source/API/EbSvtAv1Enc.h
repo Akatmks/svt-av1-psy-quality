@@ -225,7 +225,7 @@ typedef struct EbSvtAv1EncConfiguration {
      *
      * Min value is -2.
      * Max value is 13.
-     * Default is 12.
+     * Default is 4.
      */
     int8_t enc_mode;
 
@@ -650,7 +650,7 @@ typedef struct EbSvtAv1EncConfiguration {
 
     /* Flag to enable the scene change detection algorithm.
      *
-     * Default is 1. */
+     * Default is 0. */
     uint32_t scene_change_detection;
 
     /**
@@ -1139,7 +1139,7 @@ typedef struct EbSvtAv1EncConfiguration {
     Bool auto_tiling;
 
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
-    uint8_t padding[128 - 8 * sizeof(Bool) - 14 * sizeof(uint8_t) - sizeof(int8_t) - 2 * sizeof(double) - sizeof(int32_t)];
+    uint8_t padding[128 - 8 * sizeof(Bool) - 14 * sizeof(uint8_t) - sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

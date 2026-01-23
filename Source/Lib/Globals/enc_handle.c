@@ -781,7 +781,7 @@ static EbErrorType load_default_buffer_configuration_settings(
     scs->total_process_init_count += 6; // single processes count
     if (scs->static_config.pass == 0 || scs->static_config.pass == 2) {
         SVT_INFO("Level of Parallelism: %u\n", lp);
-        SVT_INFO("Number of PPCS %u\n", scs->picture_control_set_pool_init_count);
+        SVT_INFO("Number of PPCS: %u\n", scs->picture_control_set_pool_init_count);
 
         /******************************************************************
         * Platform detection, limit cpu flags to hardware available CPU
@@ -4217,7 +4217,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     // Throws a warning when scene change is on, as the feature is not optimal and may produce false detections
     if (scs->static_config.scene_change_detection == 1)
-        SVT_WARN("SCD has been optimized on SVT-AV1-Essential defaults. Accuracy cannot be guaranteed inside 5fish SVT-AV1-PSY.\n");
+        SVT_WARN("SCD has been optimized on SVT-AV1-Essential defaults. Accuracy cannot be guaranteed on 5fish/SVT-AV1-PSY.\n");
 
     // MRP level
     uint8_t mrp_level;
@@ -4446,6 +4446,19 @@ static void copy_api_from_app(
 
     // Rate Control
     scs->static_config.scene_change_detection = ((EbSvtAv1EncConfiguration*)config_struct)->scene_change_detection;
+    if (scs->static_config.scene_change_detection) {
+        if (config_struct->intra_period_length > 0 || config_struct->intra_period_length == -2)
+            scs->static_config.scene_change_detection = 1;
+        else {
+            scs->static_config.scene_change_detection = 0;
+            SVT_WARN("Keyint is too short or infinite! SCD has been disabled.\n");
+        }
+    }
+    if (!scs->static_config.scene_change_detection) {
+        if (config_struct->min_intra_period_length > 0)
+            SVT_WARN("Min keyint has been set to 0 as SCD is disabled.\n");
+        scs->static_config.min_intra_period_length = 0;
+    }
     scs->static_config.rate_control_mode = ((EbSvtAv1EncConfiguration*)config_struct)->rate_control_mode;
     if (scs->static_config.pass == ENC_SINGLE_PASS && scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
 
@@ -4572,15 +4585,10 @@ static void copy_api_from_app(
         scs->static_config.intra_period_length =
             (int32_t)(fps * scs->static_config.intra_period_length);
     }
-    if (scs->static_config.scene_change_detection == 0) {
-        if (scs->static_config.min_intra_period_length > 0)
-            SVT_WARN("min-keyint was set to 0 as SCD is disabled.\n");
-        scs->static_config.min_intra_period_length = 0;
-    }
-    else if (scs->static_config.intra_period_length == -1 || scs->static_config.intra_period_length == 0)
-        scs->static_config.min_intra_period_length = 0;
-    else if (scs->static_config.min_intra_period_length == -1)
+    if (scs->static_config.min_intra_period_length == -1)
         scs->static_config.min_intra_period_length = compute_default_min_intra_period(scs);
+    else if (scs->static_config.scene_change_detection && scs->static_config.min_intra_period_length < (1 << scs->static_config.hierarchical_levels))
+        SVT_WARN("A higher min-keyint is recommended to avoid excessive keyframe placement.\n");
     if (scs->static_config.look_ahead_distance == (uint32_t)~0)
         scs->static_config.look_ahead_distance = compute_default_look_ahead(&scs->static_config);
     scs->static_config.enable_tf = config_struct->enable_tf;
@@ -5799,12 +5807,12 @@ EB_API const char *svt_psy_get_version(void) {
 
 EB_API void svt_av1_print_version(void) {
     SVT_INFO("-------------------------------------------\n");
-    SVT_INFO("SVT [version]:\tSVT-AV1-PSY Encoder Lib %s\n", SVT_AV1_CVS_VERSION);
+    SVT_INFO("SVT [version]: 5fish/SVT-AV1-PSY [main] %s\n", SVT_AV1_CVS_VERSION);
     const char *compiler =
 #if defined(__clang__)
-    __VERSION__ "\t"
+    __VERSION__
 #elif defined(__GNUC__)
-    "GCC " __VERSION__ "\t"
+    "GCC " __VERSION__
 #elif defined( _MSC_VER ) && (_MSC_VER >= 1930)
     "Visual Studio 2022"
 #elif defined( _MSC_VER ) && (_MSC_VER >= 1920)
@@ -5819,10 +5827,11 @@ EB_API void svt_av1_print_version(void) {
     "unknown compiler"
 #endif
     ;
-    SVT_INFO("SVT [build]  :\t%s %zu bit\n", compiler,  sizeof(void*) * 8);
-#if !REPRODUCIBLE_BUILDS
-    SVT_INFO("LIB Build date: %s %s\n", __DATE__, __TIME__);
-#endif
+    SVT_INFO("SVT [build]  : %s %zu bit / %s %s\n", compiler,  sizeof(void*) * 8,
+             __DATE__, __TIME__);
+// #if !REPRODUCIBLE_BUILDS
+//     SVT_INFO("LIB Build date: %s %s\n", __DATE__, __TIME__);
+// #endif
     SVT_INFO("-------------------------------------------\n");
 }
 

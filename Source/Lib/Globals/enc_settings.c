@@ -260,22 +260,9 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
                   config->rate_control_mode);
         return_error = EB_ErrorBadParameter;
     }
-    if ((config->min_intra_period_length < -1 || config->min_intra_period_length > 2 * ((1 << 30) - 1)) &&
-        config->rate_control_mode == SVT_AV1_RC_MODE_CQP_OR_CRF) {
-        SVT_ERROR("Instance %u: The minimum intra period must be [-1, 2^31-2]  \n", channel_number + 1);
+    if (config->intra_period_length >= 0 && config->min_intra_period_length > config->intra_period_length) {
+        SVT_ERROR("Instance %u: The minimum intra period must be lower than the maximum intra period. \n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
-    }
-    if (scs->static_config.scene_change_detection != 0) {
-        if (config->intra_period_length >= 0 &&
-            config->min_intra_period_length > config->intra_period_length) {
-            SVT_ERROR("Instance %u: The minimum intra period must be lower than "
-                "the maximum intra period. \n", channel_number + 1);
-            return_error = EB_ErrorBadParameter;
-        }
-        if (config->min_intra_period_length < (1 << config->hierarchical_levels)) {
-            SVT_WARN("A higher min-keyint is recommended to avoid excessive "
-                    "key frames placement.\n", channel_number + 1);
-        }
     }
 
     if (config->intra_refresh_type > 2 || config->intra_refresh_type < 1) {
@@ -916,7 +903,7 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
     }
     else if (config->qp_scale_compress_strength > 4.0) {
         SVT_WARN(
-            "Instance %u: Using a high QP Scale Compress Strength is only useful under specific situations. "
+            "Instance %u: Using a high QP scale compress strength is only useful under specific situations. "
             "Use with caution!\n",
             channel_number + 1);
     }
@@ -1032,7 +1019,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->max_qp_allowed               = 63;
     config_ptr->min_qp_allowed               = 4;
     config_ptr->enable_adaptive_quantization = 2;
-    config_ptr->enc_mode                     = 10;
+    config_ptr->enc_mode                     = ENC_M4;
     config_ptr->intra_period_length          = -2;
     config_ptr->min_intra_period_length      = -1;
     config_ptr->multiply_keyint              = FALSE;
@@ -1681,6 +1668,32 @@ static EbErrorType str_to_keyint(const char *nptr, int32_t *out, Bool *multi) {
     return EB_ErrorNone;
 }
 
+static EbErrorType str_to_min_keyint(const char *nptr, int32_t *out, Bool *multi) {
+    char      *suff;
+    const long min_keyint = strtol(nptr, &suff, 0);
+
+    if (min_keyint > INT32_MAX || min_keyint < -1)
+        return EB_ErrorBadParameter;
+
+    switch (*suff) {
+    case 's':
+        // signal we need to multiply min_keyint * frame_rate
+        *multi = TRUE;
+        *out   = min_keyint;
+        break;
+    case '\0':
+        *multi = FALSE;
+        *out   = min_keyint < 1 ? min_keyint : min_keyint - 1;
+        break;
+    default:
+        // else leave as untouched, we have an invalid min_keyint
+        SVT_ERROR("Invalid min-keyint value: %s\n", nptr);
+        return EB_ErrorBadParameter;
+    }
+
+    return EB_ErrorNone;
+}
+
 static EbErrorType str_to_bitrate(const char *nptr, uint32_t *out) {
     char        *suff;
     const double bitrate = strtod(nptr, &suff);
@@ -2113,7 +2126,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         return str_to_keyint(value, &config_struct->intra_period_length, &config_struct->multiply_keyint);
 
     if (!strcmp(name, "min-keyint"))
-        return str_to_keyint(value, &config_struct->min_intra_period_length, &config_struct->multiply_keyint);
+        return str_to_min_keyint(value, &config_struct->min_intra_period_length, &config_struct->multiply_keyint);
 
     if (!strcmp(name, "tbr"))
         return str_to_bitrate(value, &config_struct->target_bit_rate);
