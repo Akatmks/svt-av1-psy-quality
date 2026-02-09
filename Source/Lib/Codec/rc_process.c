@@ -1766,7 +1766,8 @@ void normalize_sb_delta_q(PictureControlSet *pcs) {
         }
     }
     else { // `--balancing-q-bias 1 --enable-variance-boost 0`
-        if (pcs->temporal_layer_index <= pcs->ppcs->hierarchical_levels - (int32_t)scs->static_config.hierarchical_levels)
+        if ((pcs->ppcs->temporal_layer_index + scs->static_config.hierarchical_levels - pcs->ppcs->hierarchical_levels) == 0 ||
+            pcs->ppcs->slice_type == I_SLICE)
             if (qindex >= 60)
                 delta_q_res = 4;
             else

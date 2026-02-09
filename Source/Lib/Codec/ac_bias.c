@@ -16,6 +16,9 @@
 #include "aom_dsp_rtcd.h"
 #include "me_context.h"
 #include "segmentation.h"
+#include "sequence_control_set.h"
+#include "pcs.h"
+#include "md_process.h"
 
 /* Regular version of "AC Bias"
  *
@@ -191,17 +194,25 @@ double get_effective_ac_bias(const double ac_bias, const bool is_islice, const u
     }
 }
 
-double get_effective_ac_bias_texture_psy_bias(const double ac_bias, const bool is_islice, const uint8_t temporal_layer_index,
-                                              const double texture_ac_bias, const uint16_t texture_variance_thr,
-                                              uint16_t **variance, const uint16_t sb_index, const BlockGeom *blk_geom) {
-    const double effective_ac_bias = get_effective_ac_bias(ac_bias, is_islice, temporal_layer_index);
-    const double effective_texture_ac_bias = get_effective_ac_bias(texture_ac_bias, is_islice, temporal_layer_index);
+double get_effective_ac_bias_texture_psy_bias(PictureControlSet *pcs, ModeDecisionContext *ctx) {
+    uint8_t temporal_layer_index;
+    if (!pcs->scs->static_config.balancing_q_bias)
+        temporal_layer_index = pcs->ppcs->temporal_layer_index;
+    else {
+        temporal_layer_index = (pcs->ppcs->temporal_layer_index + pcs->scs->static_config.hierarchical_levels - pcs->ppcs->hierarchical_levels);
+        if (pcs->ppcs->slice_type == I_SLICE)
+            temporal_layer_index = 0;
+    }
+    const bool is_islice = pcs->ppcs->slice_type == I_SLICE;
 
-    const uint16_t blk_variance = get_variance_for_cu_16x16_min(blk_geom, variance[sb_index]);
+    const double effective_ac_bias = get_effective_ac_bias(pcs->scs->static_config.ac_bias, is_islice, temporal_layer_index);
+    const double effective_texture_ac_bias = get_effective_ac_bias(pcs->scs->static_config.texture_ac_bias, is_islice, temporal_layer_index);
 
-    if (blk_variance >= texture_variance_thr >> 1)
+    const uint16_t blk_variance = get_variance_for_cu_16x16_min(ctx->blk_geom, pcs->ppcs->variance[ctx->sb_index]);
+
+    if (blk_variance >= pcs->scs->static_config.texture_variance_thr >> 1)
         return effective_ac_bias;
-    else if (blk_variance >= texture_variance_thr >> 2)
+    else if (blk_variance >= pcs->scs->static_config.texture_variance_thr >> 2)
         return effective_ac_bias * ((double)2/3) + effective_texture_ac_bias * ((double)1/3);
     else
         return effective_texture_ac_bias;
