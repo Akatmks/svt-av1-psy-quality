@@ -47,7 +47,8 @@ void     svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom
                                                        SuperBlock *sb_ptr, BlkStruct *blk_ptr);
 uint64_t svt_spatial_full_distortion_ssim_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_stride,
                                                  uint8_t *recon, int32_t recon_offset, uint32_t recon_stride,
-                                                 uint32_t area_width, uint32_t area_height, bool hbd, double ac_bias);
+                                                 uint32_t area_width, uint32_t area_height, bool hbd, double effective_ac_bias,
+                                                 double effective_energy_bias);
 void     aom_av1_set_ssim_rdmult(struct ModeDecisionContext *ctx, PictureControlSet *pcs, const int mi_row,
                                  const int mi_col);
 
@@ -997,7 +998,8 @@ static void fast_loop_core_light_pd0(ModeDecisionCandidateBuffer *cand_bf, Pictu
             uint8_t                *src_y  = input_pic->buffer_y + input_origin_index;
             *(cand_bf->fast_cost)          = fn_ptr->vf(pred_y, ref_pic->stride_y, src_y, input_pic->stride_y, &sse);
         } else {
-            const double effective_ac_bias = get_effective_ac_bias_texture_psy_bias(pcs, ctx);
+            const double effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
+            const double effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
             *(cand_bf->fast_cost) = svt_spatial_full_distortion_kernel_facade(
                                         input_pic->buffer_y,
                                         input_origin_index,
@@ -1027,7 +1029,8 @@ static void fast_loop_core_light_pd0(ModeDecisionCandidateBuffer *cand_bf, Pictu
                                                                ctx->blk_geom->bwidth,
                                                                ctx->blk_geom->bheight >> 1,
                                                                ctx->hbd_md,
-                                                               effective_ac_bias)
+                                                               effective_ac_bias,
+                                                               effective_energy_bias)
                     << 1;
             }
         }
@@ -4345,7 +4348,8 @@ static void perform_tx_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ct
     ctx->three_quad_energy = 0;
 
     TxSize       tx_size           = ctx->blk_geom->txsize[0];
-    const double effective_ac_bias = get_effective_ac_bias_texture_psy_bias(pcs, ctx);
+    const double effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
+    const double effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
 
     if (ctx->mds_subres_step == 2) {
         if (tx_size == TX_64X64)
@@ -4517,7 +4521,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
     // Do not turn ON TXT search beyond this point
     const uint8_t only_dct_dct = search_dct_dct_only(pcs, ctx, cand_bf, ctx->tx_depth, is_inter) || tx_search_skip_flag;
     const TxSetType tx_set_type       = get_ext_tx_set_type(tx_size, is_inter, pcs->ppcs->frm_hdr.reduced_tx_set);
-    const double    effective_ac_bias = get_effective_ac_bias_texture_psy_bias(pcs, ctx);
+    const double    effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
+    const double    effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
 
     // resize after checks on allowable TX types
     if (ctx->mds_subres_step == 2) {
@@ -4781,7 +4786,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                         cropped_tx_width,
                         cropped_tx_height,
                         ctx->hbd_md,
-                        effective_ac_bias);
+                        effective_ac_bias,
+                        effective_energy_bias);
                 }
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_RESIDUAL] =
                     svt_spatial_full_distortion_kernel_facade(input_pic->buffer_y,
@@ -4812,7 +4818,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                         cropped_tx_width,
                         cropped_tx_height,
                         ctx->hbd_md,
-                        effective_ac_bias);
+                        effective_ac_bias,
+                        effective_energy_bias);
                 }
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_PREDICTION] <<= 4;
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_RESIDUAL] <<= 4;
@@ -4979,7 +4986,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                 cropped_tx_width,
                 cropped_tx_height,
                 ctx->hbd_md,
-                effective_ac_bias);
+                effective_ac_bias,
+                effective_energy_bias);
 
             txb_full_distortion_txt[DIST_SSIM][tx_type][DIST_CALC_RESIDUAL] <<= 4;
 
@@ -5021,7 +5029,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                                                           cropped_tx_width,
                                                                           cropped_tx_height,
                                                                           ctx->hbd_md,
-                                                                          effective_ac_bias);
+                                                                          effective_ac_bias,
+                                                                          effective_energy_bias);
         uint64_t             ssim_residual_dist = svt_spatial_full_distortion_ssim_kernel(input_pic->buffer_y,
                                                                               input_txb_origin_index,
                                                                               input_pic->stride_y,
@@ -5031,7 +5040,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                                                               cropped_tx_width,
                                                                               cropped_tx_height,
                                                                               ctx->hbd_md,
-                                                                              effective_ac_bias);
+                                                                              effective_ac_bias,
+                                                                              effective_energy_bias);
         ssim_pred_dist <<= (4 + ctx->mds_subres_step);
         ssim_residual_dist <<= (4 + ctx->mds_subres_step);
 
@@ -5047,7 +5057,8 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                                                           cropped_tx_width,
                                                                           cropped_tx_height,
                                                                           ctx->hbd_md,
-                                                                          effective_ac_bias);
+                                                                          effective_ac_bias,
+                                                                          effective_energy_bias);
         ssim_pred_dist <<= (4 + ctx->mds_subres_step);
 
         y_full_distortion[DIST_SSIM][DIST_CALC_RESIDUAL] +=
@@ -5413,7 +5424,8 @@ static void perform_dct_dct_tx_light_pd1(PictureControlSet *pcs, ModeDecisionCon
     uint32_t full_lambda           = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
     EbPictureBufferDesc *input_pic = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
     const Bool           is_inter  = is_inter_mode(cand_bf->cand->pred_mode) ? TRUE : FALSE;
-    const double         effective_ac_bias = get_effective_ac_bias_texture_psy_bias(pcs, ctx);
+    const double         effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
+    const double         effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
         
     ctx->three_quad_energy         = 0;
     svt_aom_residual_kernel(input_pic->buffer_y,
@@ -5579,7 +5591,8 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
     const uint32_t input_txb_origin_index = (ctx->sb_origin_x + tx_org_x + input_pic->org_x) +
         ((ctx->sb_origin_y + tx_org_y + input_pic->org_y) * input_pic->stride_y);
 
-    const double effective_ac_bias = get_effective_ac_bias_texture_psy_bias(pcs, ctx);
+    const double effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
+    const double effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
 
     // Y Residual
     if (!is_inter) {
@@ -5745,7 +5758,8 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                 cropped_tx_width,
                 cropped_tx_height,
                 ctx->hbd_md,
-                effective_ac_bias);
+                effective_ac_bias,
+                effective_energy_bias);
             y_full_distortion[DIST_SSIM][DIST_CALC_RESIDUAL] = svt_spatial_full_distortion_ssim_kernel(
                 input_pic->buffer_y,
                 input_txb_origin_index,
@@ -5756,7 +5770,8 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                 cropped_tx_width,
                 cropped_tx_height,
                 ctx->hbd_md,
-                effective_ac_bias);
+                effective_ac_bias,
+                effective_energy_bias);
             y_full_distortion[DIST_SSIM][DIST_CALC_PREDICTION] <<= 4;
             y_full_distortion[DIST_SSIM][DIST_CALC_RESIDUAL] <<= 4;
         }
@@ -5788,7 +5803,8 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                                                        cropped_tx_width,
                                                                                        cropped_tx_height,
                                                                                        ctx->hbd_md,
-                                                                                       effective_ac_bias);
+                                                                                       effective_ac_bias,
+                                                                                       effective_energy_bias);
         }
 
         y_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL] = svt_spatial_full_distortion_kernel_facade(
@@ -5819,7 +5835,8 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                                                      cropped_tx_width,
                                                                                      cropped_tx_height,
                                                                                      ctx->hbd_md,
-                                                                                     effective_ac_bias);
+                                                                                     effective_ac_bias,
+                                                                                     effective_energy_bias);
         }
         y_full_distortion[DIST_SSD][DIST_CALC_PREDICTION] <<= 4;
         y_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL] <<= 4;
