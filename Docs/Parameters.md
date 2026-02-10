@@ -163,7 +163,8 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
 | [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
 | [md] no nic `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [md] SAD distortion | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
+| [md] mds0 SAD distortion | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
+| [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
 | [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `2.0` | `2.0` | `2.0` | `2.0` | Can be overwritten |
 | [md] `--texture-ac-bias` | － | `2.0` | `2.0` | `4.0` | `8.0` | `8.0` | `8.0` | Can be overwritten |

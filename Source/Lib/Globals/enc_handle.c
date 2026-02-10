@@ -3287,13 +3287,17 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
 static void derive_vq_params(SequenceControlSet* scs) {
     VqCtrls* vq_ctrl = &scs->vq_ctrls;
 
+    uint8_t psy_bias_disable_unipred_bias = 0;
+    if (scs->static_config.texture_psy_bias >= 1.0)
+        psy_bias_disable_unipred_bias = 1;
+
     if (scs->static_config.tune == 0 || scs->static_config.tune == 3 || 
         (scs->static_config.alt_ssim_tuning && (scs->static_config.tune == 2 || scs->static_config.tune == 4))) {
 
         // Sharpness
         vq_ctrl->sharpness_ctrls.scene_transition = 1;
         vq_ctrl->sharpness_ctrls.tf               = 1;
-        vq_ctrl->sharpness_ctrls.unipred_bias     = 1;
+        vq_ctrl->sharpness_ctrls.unipred_bias     = !psy_bias_disable_unipred_bias;
         vq_ctrl->sharpness_ctrls.ifs              = 1;
         vq_ctrl->sharpness_ctrls.cdef             = 1;
         vq_ctrl->sharpness_ctrls.restoration      = 1;
