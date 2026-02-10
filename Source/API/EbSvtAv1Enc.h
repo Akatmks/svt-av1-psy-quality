@@ -1138,11 +1138,12 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     uint16_t texture_variance_thr;
 
+    uint8_t psy_bias_mds0_sad;
     uint8_t psy_bias_disable_warped_motion;
     uint8_t psy_bias_disable_me_8x8;
     uint8_t psy_bias_disable_sgrproj;
     int8_t psy_bias_coeff_lvl_offset;
-    uint8_t psy_bias_intra_mode_bias;
+    uint8_t psy_bias_inter_mode_bias;
 
     /**
      * @brief Enable DLF bias
@@ -1304,7 +1305,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    - 2 * sizeof(Bool) - 21 * sizeof(uint8_t) - 8 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 5 * sizeof(double)];
+                    - 2 * sizeof(Bool) - 22 * sizeof(uint8_t) - 8 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 5 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

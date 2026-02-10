@@ -881,7 +881,7 @@ void finish_cdef_search(PictureControlSet *pcs, SequenceControlSet *scs) {
     }
 
     nb_strength_bits = 0;
-    if (scs->static_config.texture_psy_bias >= 5.0) {
+    if (scs->static_config.texture_psy_bias >= 6.0) {
         for (i = 0; i < sb_count; i++) {
             // The same rule as compute_cdef_dist_sad_mse in cdef_process.c
             if (scs->static_config.cdef_bias &&

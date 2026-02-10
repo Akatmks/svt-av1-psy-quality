@@ -4067,7 +4067,12 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 
         // cand_elimination_ctrls
-        cand_reduction_ctrls->cand_elimination_ctrls.enabled = 0;
+        if (!psy_bias_cand_elimination)
+            cand_reduction_ctrls->cand_elimination_ctrls.enabled = 0;
+        else {
+            cand_reduction_ctrls->cand_elimination_ctrls.enabled = 2;
+            cand_reduction_ctrls->cand_elimination_ctrls.dc_only = 1;
+        }
 
         // reduce_unipred_candidates
         cand_reduction_ctrls->reduce_unipred_candidates = 0;
@@ -5169,7 +5174,7 @@ void svt_aom_set_nsq_geom_ctrls(ModeDecisionContext *ctx, uint8_t nsq_geom_level
         enc_mode >= ENC_MR)
         psy_bias_disallow_HV4 = true;
     uint8_t psy_bias_allow_HVA_HVB = false;
-    if (texture_psy_bias >= 3.0 && enc_mode <= ENC_M2)
+    if (texture_psy_bias >= 4.0 && enc_mode <= ENC_M2)
         psy_bias_allow_HVA_HVB = true;
 
     switch (nsq_geom_level) {
@@ -7061,7 +7066,7 @@ static void set_tx_shortcut_ctrls(PictureControlSet *pcs, ModeDecisionContext *c
 
 // The levels of mds0_level has been changed in 5fish/SVT-AV1-PSY compared to mainline.
 // Be careful when backporting.
-static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, double texture_psy_bias) {
+static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, double psy_bias_mds0_sad) {
     Mds0Ctrls *ctrls = &ctx->mds0_ctrls;
 
     switch (mds0_level) {
@@ -7078,7 +7083,7 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, doub
         ctrls->mds0_distortion_th           = 0;
         break;
     case 2:
-        if (texture_psy_bias >= 6.0)
+        if (psy_bias_mds0_sad)
             ctrls->mds0_dist_type           = SAD;
         else
             ctrls->mds0_dist_type           = VAR;
@@ -7087,7 +7092,7 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, doub
         ctrls->mds0_distortion_th           = 0;
         break;
     case 3:
-        if (texture_psy_bias >= 6.0)
+        if (psy_bias_mds0_sad)
             ctrls->mds0_dist_type           = SAD;
         else
             ctrls->mds0_dist_type           = VAR;
@@ -7096,13 +7101,19 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, doub
         ctrls->mds0_distortion_th           = 0;
         break;
     case 4:
-        ctrls->mds0_dist_type               = VAR;
+        if (psy_bias_mds0_sad)
+            ctrls->mds0_dist_type           = SAD;
+        else
+            ctrls->mds0_dist_type           = VAR;
         ctrls->mds0_dist_type_uv            = VAR;
         ctrls->enable_cost_based_early_exit = 1;
         ctrls->mds0_distortion_th           = 0;
         break;
     case 5:
-        ctrls->mds0_dist_type               = VAR;
+        if (psy_bias_mds0_sad)
+            ctrls->mds0_dist_type           = SAD;
+        else
+            ctrls->mds0_dist_type           = VAR;
         ctrls->mds0_dist_type_uv            = VAR;
         ctrls->enable_cost_based_early_exit = 1;
         ctrls->mds0_distortion_th           = 50;
@@ -7458,7 +7469,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd0(SequenceControlSet *scs, PictureControl
     }
 
     ctx->d2_parent_bias = 1000;
-    set_mds0_controls(ctx, 4, scs->static_config.texture_psy_bias);
+    set_mds0_controls(ctx, 4, scs->static_config.psy_bias_mds0_sad);
     if (pd0_level == VERY_LIGHT_PD0)
         return;
     svt_aom_set_chroma_controls(ctx, 0 /*chroma off*/);
@@ -7633,7 +7644,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd1(PictureControlSet *pcs, ModeDecisionCon
              (me_8x8_cost_variance < (250 * picture_qp) && me_64x64_distortion < (250 * picture_qp))))
             mds0_level = 0;
     }
-    set_mds0_controls(ctx, mds0_level, pcs->scs->static_config.texture_psy_bias);
+    set_mds0_controls(ctx, mds0_level, pcs->scs->static_config.psy_bias_mds0_sad);
 
     uint8_t lpd1_tx_level = 0;
     if (lpd1_level <= LPD1_LVL_2)
@@ -7972,7 +7983,7 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
         else
             mds0_level = 3;
     }
-    set_mds0_controls(ctx, mds0_level, scs->static_config.texture_psy_bias);
+    set_mds0_controls(ctx, mds0_level, scs->static_config.psy_bias_mds0_sad);
 
     set_subres_controls(ctx, 0);
     ctx->inter_depth_bias = 0;

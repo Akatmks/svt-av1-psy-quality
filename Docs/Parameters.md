@@ -101,11 +101,12 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **TexturePsyBias**               | --texture-psy-bias          | [0-7]                          | 0           | Improve texture retention. Check below for more description. [0: disabled]                                    |
 | **LineartVarianceThr**           | --lineart-variance-thr      | [0.0-16.0]                     | 5.5         | Threshold for `--lineart-psy-bias`. Check below for more description.                                         |
 | **TextureVarianceThr**           | --texture-variance-thr      | [0.0-16.0]                     | 5.5         | Threshold for `--texture-psy-bias`. Check below for more description.                                         |
+| **PsyBiasmds0SAD**               | --psy-bias-mds0-sad         | [0-1]                          | 0           | Use SAD in mds0                                                                                               |
 | **PsyBiasDisableWarpedMotion**   | --psy-bias-disable-warped-motion | [0-1]                     | 0           | Disable warped motion                                                                                         |
 | **PsyBiasDisableMe8x8**          | --psy-bias-disable-me-8x8   | [0-1]                          | 0           | Disable me 8x8 and tf 8x8 pred                                                                                |
 | **PsyBiasDisableSGRPROJ**        | --psy-bias-disable-sgrproj  | [0-1]                          | 0           | Disable SGRPROJ in restoration                                                                                |
 | **PsyBiasCoeffLvlOffset**        | --psy-bias-coeff-lvl-offset | [-3-3]                         | 0           | Offset `pcs->coeff_lvl`                                                                                       |
-| **PsyBiasIntraModeBias**         | --psy-bias-intra-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
+| **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
 
 ### Noise level threshold
 
@@ -125,6 +126,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [me] `--psy-bias-disable-warped-motion 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
 | [me] `--psy-bias-disable-me-8x8 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
 | [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `8.0` | `10.0` | `10.0` | `12.0` | `12.0` | Applied when `--balancing-q-bias 1`; Can be overwritten |
 | [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
 | [rc] `chroma_qindex` bias | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] alternative high freq dev thr | ◯ | ◯ | － | － | － | － | － | |
@@ -147,37 +149,37 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 
 ### Texture Psy Bias
 
-| `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
-| :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
-| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `10.0` | `12.0` | `16.0` | `16.0` | `16.0` | Applied when `--balancing-q-bias 1`; Can be overwritten |
-| [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Applied when `--balancing-q-bias 1`; Can be overwritten |
-| [rc] `--balancing-tpl-intra-mode-beta-bias 1` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `chroma_qindex` bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [md] disable detect high freq | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] allow HVA/HVB at p2 or slower | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
-| [md] no nic `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [md] mds0 SAD distortion | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
-| [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `2.0` | `2.0` | `2.0` | `2.0` | Can be overwritten |
-| [md] `--texture-ac-bias` | － | `2.0` | `2.0` | `4.0` | `8.0` | `8.0` | `8.0` | Can be overwritten |
-| [md] variance obmc decision | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-intra-mode-bias` | ✕ | ✕ | `1` | `1` | `2` | `2` | `2` | Can be overwritten |
-| [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [cdef] `--enable-cdef 0` | ✕ | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | Can be overwritten |
-| [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | － | |
-| [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | － | |
-| [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | － | Only secondary CDEF strength is disabled |
+| `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` & `7` | Note |
+| :-- | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
+| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `10.0` | `12.0` | `12.0` | `16.0` | Applied when `--balancing-q-bias 1`; Can be overwritten |
+| [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Applied when `--balancing-q-bias 1`; Can be overwritten |
+| [rc] `--balancing-tpl-intra-mode-beta-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
+| [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [rc] `chroma_qindex` bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
+| [md] disable detect high freq | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+| [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+| [md] allow HVA/HVB at p2 or slower | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
+| [md] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
+| [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
+| [md] no nic `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-mds0-sad` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | Can be overwritten |
+| [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
+| [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `1.0` | `3.0` | `3.0` | Can be overwritten |
+| [md] `--texture-ac-bias` | － | － | － | `4.0` | `8.0` | `8.0` | Can be overwritten |
+| [md] `--texture-energy-bias` | `1.00` | `1.00` | `1.02` | `1.02` | `1.10` | `1.10` | Can be overwritten |
+| [md] variance obmc decision | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-inter-mode-bias` | ✕ | ✕ | `1` | `1` | `1` | `2` | Can be overwritten |
+| [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | |
+| [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
 
 ### `--lineart-variance-thr` and `--texture-variance-thr` calculation
 

@@ -983,6 +983,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
     if ((config->lineart_psy_bias || config->texture_psy_bias) && config->tx_bias)
         SVT_WARN("Instance %u: tx-bias is replaced by lineart-psy-bias and texture-psy-bias and they are not intended to be used in conjunction with each other\n", channel_number + 1);
 
+    if (config->psy_bias_mds0_sad > 1 && config->psy_bias_mds0_sad != UINT8_DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-mds0-sad must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
     if (config->psy_bias_disable_warped_motion > 1 && config->psy_bias_disable_warped_motion != UINT8_DEFAULT) {
         SVT_ERROR("Instance %u: psy-bias-disable-warped-motion must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -1000,8 +1004,8 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: psy-bias-coeff-lvl-offset must be between -3 and 3\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (config->psy_bias_intra_mode_bias > 5 && config->psy_bias_intra_mode_bias != UINT8_DEFAULT) {
-        SVT_ERROR("Instance %u: psy-bias-intra-mode-bias must be between 0 and 5\n", channel_number + 1);
+    if (config->psy_bias_inter_mode_bias > 5 && config->psy_bias_inter_mode_bias != UINT8_DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-inter-mode-bias must be between 0 and 5\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1269,11 +1273,12 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->texture_psy_bias_easter_egg       = 0;
     config_ptr->lineart_variance_thr              = 44;
     config_ptr->texture_variance_thr              = 44;
+    config_ptr->psy_bias_mds0_sad                 = UINT8_DEFAULT;
     config_ptr->psy_bias_disable_warped_motion    = UINT8_DEFAULT;
     config_ptr->psy_bias_disable_me_8x8           = UINT8_DEFAULT;
     config_ptr->psy_bias_disable_sgrproj          = UINT8_DEFAULT;
     config_ptr->psy_bias_coeff_lvl_offset         = INT8_DEFAULT;
-    config_ptr->psy_bias_intra_mode_bias          = UINT8_DEFAULT;
+    config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
     config_ptr->dlf_bias_max_dlf[0]               = 8;
@@ -1585,10 +1590,11 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                  config->noise_norm_strength);
 
         if (config->tx_bias) {
-            if (config->texture_ac_bias != config->ac_bias)
-                SVT_INFO("SVT [config]: AC bias / texture AC bias strength / TX bias \t\t\t: %.2f / %.2f / %s\n",
+            if (config->texture_ac_bias != config->ac_bias || config->texture_energy_bias != 1.0)
+                SVT_INFO("SVT [config]: AC bias / texture AC bias / texture energy bias / TX bias \t: %.2f / %.2f / %.2f / %s\n",
                          config->ac_bias,
                          config->texture_ac_bias,
+                         config->texture_energy_bias,
                          config->tx_bias == 1
                              ? "full"
                              : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
@@ -1600,10 +1606,11 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                              : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
         }
         else if (config->ac_bias) {
-            if (config->texture_ac_bias != config->ac_bias)
-                SVT_INFO("SVT [config]: AC bias / texture AC bias strength \t\t\t\t: %.2f / %.2f\n",
+            if (config->texture_ac_bias != config->ac_bias || config->texture_energy_bias != 1.0)
+                SVT_INFO("SVT [config]: AC bias / texture AC bias / texture energy bias strength \t: %.2f / %.2f / %.2f\n",
                          config->ac_bias,
-                         config->texture_ac_bias);
+                         config->texture_ac_bias,
+                         config->texture_energy_bias);
             else
                 SVT_INFO("SVT [config]: AC bias strength \t\t\t\t\t\t: %.2f\n",
                          config->ac_bias);
@@ -2768,10 +2775,11 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"kf-tf-strength", &config_struct->kf_tf_strength},
         {"noise-norm-strength", &config_struct->noise_norm_strength},
         {"tx-bias", &config_struct->tx_bias},
+        {"psy-bias-mds0-sad", &config_struct->psy_bias_mds0_sad},
         {"psy-bias-disable-warped-motion", &config_struct->psy_bias_disable_warped_motion},
         {"psy-bias-disable-me-8x8", &config_struct->psy_bias_disable_me_8x8},
         {"psy-bias-disable-sgrproj", &config_struct->psy_bias_disable_sgrproj},
-        {"psy-bias-intra-mode-bias", &config_struct->psy_bias_intra_mode_bias},
+        {"psy-bias-inter-mode-bias", &config_struct->psy_bias_inter_mode_bias},
         {"dlf-bias", &config_struct->dlf_bias},
         {"dlf-sharpness", &config_struct->dlf_sharpness},
         {"cdef-bias", &config_struct->cdef_bias},

@@ -231,11 +231,12 @@
 #define TEXTURE_PSY_BIAS_TOKEN "--texture-psy-bias"
 #define LINEART_VARIANCE_THR_TOKEN "--lineart-variance-thr"
 #define TEXTURE_VARIANCE_THR_TOKEN "--texture-variance-thr"
+#define PSY_BIAS_MDS0_SAD_TOKEN "--psy-bias-mds0-sad"
 #define PSY_BIAS_DISABLE_WARPED_MOTION_TOKEN "--psy-bias-disable-warped-motion"
 #define PSY_BIAS_DISABLE_ME_8X8_TOKEN "--psy-bias-disable-me-8x8"
 #define PSY_BIAS_DISABLE_SGRPROJ_TOKEN "--psy-bias-disable-sgrproj"
 #define PSY_BIAS_COEFF_LVL_OFFSET_TOKEN "--psy-bias-coeff-lvl-offset"
-#define PSY_BIAS_INTRA_MODE_BIAS_TOKEN "--psy-bias-intra-mode-bias"
+#define PSY_BIAS_INTER_MODE_BIAS_TOKEN "--psy-bias-inter-mode-bias"
 #define DLF_BIAS_TOKEN "--dlf-bias"
 #define DLF_SHARPNESS_TOKEN "--dlf-sharpness"
 #define DLF_BIAS_MAX_DLF_TOKEN "--dlf-bias-max-dlf"
@@ -1407,6 +1408,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Threshold for `--texture-psy-bias`. [0.0-16.0]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     PSY_BIAS_MDS0_SAD_TOKEN,
+     "[PSY] Use SAD in mds0. [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      PSY_BIAS_DISABLE_WARPED_MOTION_TOKEN,
      "[PSY] Disable warped motion. [0-1]",
      set_cfg_generic_token},
@@ -1423,7 +1428,7 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Offset `pcs->coeff_lvl`. [-3-3]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
-     PSY_BIAS_INTRA_MODE_BIAS_TOKEN,
+     PSY_BIAS_INTER_MODE_BIAS_TOKEN,
      "[PSY] Bias against intra mode in non base layers. [0-5]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
@@ -1746,11 +1751,12 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, LINEART_VARIANCE_THR_TOKEN, "LineartVarianceThr", set_cfg_generic_token},
     {SINGLE_INPUT, TEXTURE_VARIANCE_THR_TOKEN, "TextureVarianceThr", set_cfg_generic_token},
 
+    {SINGLE_INPUT, PSY_BIAS_MDS0_SAD_TOKEN, "PsyBiasmds0SAD", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_DISABLE_WARPED_MOTION_TOKEN, "PsyBiasDisableWarpedMotion", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_DISABLE_ME_8X8_TOKEN, "PsyBiasDisableMe8x8", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_DISABLE_SGRPROJ_TOKEN, "PsyBiasDisableSGRPROJ", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_COEFF_LVL_OFFSET_TOKEN, "PsyBiasCoeffLvlOffset", set_cfg_generic_token},
-    {SINGLE_INPUT, PSY_BIAS_INTRA_MODE_BIAS_TOKEN, "PsyBiasIntraModeBias", set_cfg_generic_token},
+    {SINGLE_INPUT, PSY_BIAS_INTER_MODE_BIAS_TOKEN, "PsyBiasInterModeBias", set_cfg_generic_token},
 
     // DLF Bias
     {SINGLE_INPUT, DLF_BIAS_TOKEN, "DLFBias", set_cfg_generic_token},
