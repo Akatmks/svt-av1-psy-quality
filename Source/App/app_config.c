@@ -236,6 +236,7 @@
 #define PSY_BIAS_DISABLE_ME_8X8_TOKEN "--psy-bias-disable-me-8x8"
 #define PSY_BIAS_DISABLE_SGRPROJ_TOKEN "--psy-bias-disable-sgrproj"
 #define PSY_BIAS_COEFF_LVL_OFFSET_TOKEN "--psy-bias-coeff-lvl-offset"
+#define PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN "--psy-bias-mds0-intra-inter-mode-bias"
 #define PSY_BIAS_INTER_MODE_BIAS_TOKEN "--psy-bias-inter-mode-bias"
 #define DLF_BIAS_TOKEN "--dlf-bias"
 #define DLF_SHARPNESS_TOKEN "--dlf-sharpness"
@@ -1428,6 +1429,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Offset `pcs->coeff_lvl`. [-3-3]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN,
+     "[PSY] Bias towards intra mode in base layers, and against intra mode in non base layers. [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      PSY_BIAS_INTER_MODE_BIAS_TOKEN,
      "[PSY] Bias against intra mode in non base layers. [0-5]",
      set_cfg_generic_token},
@@ -1756,6 +1761,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, PSY_BIAS_DISABLE_ME_8X8_TOKEN, "PsyBiasDisableMe8x8", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_DISABLE_SGRPROJ_TOKEN, "PsyBiasDisableSGRPROJ", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_COEFF_LVL_OFFSET_TOKEN, "PsyBiasCoeffLvlOffset", set_cfg_generic_token},
+    {SINGLE_INPUT, PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN, "PsyBiasmds0IntraInterModeBias", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_INTER_MODE_BIAS_TOKEN, "PsyBiasInterModeBias", set_cfg_generic_token},
 
     // DLF Bias

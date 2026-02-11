@@ -1004,6 +1004,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: psy-bias-coeff-lvl-offset must be between -3 and 3\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (config->psy_bias_mds0_intra_inter_mode_bias > 1 && config->psy_bias_mds0_intra_inter_mode_bias != UINT8_DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-mds0-intra-inter-mode-bias must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
     if (config->psy_bias_inter_mode_bias > 5 && config->psy_bias_inter_mode_bias != UINT8_DEFAULT) {
         SVT_ERROR("Instance %u: psy-bias-inter-mode-bias must be between 0 and 5\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -1278,6 +1282,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_disable_me_8x8           = UINT8_DEFAULT;
     config_ptr->psy_bias_disable_sgrproj          = UINT8_DEFAULT;
     config_ptr->psy_bias_coeff_lvl_offset         = INT8_DEFAULT;
+    config_ptr->psy_bias_mds0_intra_inter_mode_bias = UINT8_DEFAULT;
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
@@ -2779,6 +2784,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"psy-bias-disable-warped-motion", &config_struct->psy_bias_disable_warped_motion},
         {"psy-bias-disable-me-8x8", &config_struct->psy_bias_disable_me_8x8},
         {"psy-bias-disable-sgrproj", &config_struct->psy_bias_disable_sgrproj},
+        {"psy-bias-mds0-intra-inter-mode-bias", &config_struct->psy_bias_mds0_intra_inter_mode_bias},
         {"psy-bias-inter-mode-bias", &config_struct->psy_bias_inter_mode_bias},
         {"dlf-bias", &config_struct->dlf_bias},
         {"dlf-sharpness", &config_struct->dlf_sharpness},

@@ -4100,6 +4100,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.noise_norm_strength == UINT8_DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 5.0)
             scs->static_config.noise_norm_strength = 4;
+        else if (scs->static_config.lineart_psy_bias >= 5.0)
+            scs->static_config.noise_norm_strength = 0;
         else
             scs->static_config.noise_norm_strength = 1;
     }
@@ -4126,6 +4128,13 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else
             scs->static_config.texture_energy_bias = 1.00;
     }
+    
+    if (scs->static_config.psy_bias_mds0_intra_inter_mode_bias == UINT8_DEFAULT) {
+        if (scs->static_config.texture_psy_bias >= 5.0)
+            scs->static_config.psy_bias_mds0_intra_inter_mode_bias = 1;
+        else
+            scs->static_config.psy_bias_mds0_intra_inter_mode_bias = 0;
+    }
 
     if (scs->static_config.psy_bias_inter_mode_bias == UINT8_DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 6.0)
@@ -4145,7 +4154,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.cdef_bias = 1;
     }
     if (scs->static_config.dlf_sharpness == UINT8_DEFAULT) {
-        if (scs->static_config.lineart_psy_bias >= 5.0)
+        if (scs->static_config.lineart_psy_bias >= 6.0)
             scs->static_config.dlf_sharpness = 7;
         else
             scs->static_config.dlf_sharpness = CLIP3(0, 7, scs->static_config.sharpness);
@@ -4945,6 +4954,7 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_disable_me_8x8 = config_struct->psy_bias_disable_me_8x8;
     scs->static_config.psy_bias_disable_sgrproj = config_struct->psy_bias_disable_sgrproj;
     scs->static_config.psy_bias_coeff_lvl_offset = config_struct->psy_bias_coeff_lvl_offset;
+    scs->static_config.psy_bias_mds0_intra_inter_mode_bias = config_struct->psy_bias_mds0_intra_inter_mode_bias;
     scs->static_config.psy_bias_inter_mode_bias = config_struct->psy_bias_inter_mode_bias;
 
     // DLF bias

@@ -7831,8 +7831,30 @@ static void post_mds0_nic_pruning(PictureControlSet *pcs, ModeDecisionContext *c
         mds1_class_th[1]                                   = (uint64_t)~0;
     uint8_t                       mds1_band_cnt            = pruning_ctrls.mds1_band_cnt;
     uint16_t                      mds1_cand_th_rank_factor = pruning_ctrls.mds1_cand_th_rank_factor;
-    uint64_t                      mds1_cand_base_th_intra  = (pruning_ctrls.mds1_cand_base_th_intra * q_weight) / 1000;
-    uint64_t                      mds1_cand_base_th_inter  = (pruning_ctrls.mds1_cand_base_th_inter * q_weight) / 1000;
+    uint64_t                      mds1_cand_base_th_intra  = pruning_ctrls.mds1_cand_base_th_intra;
+    uint64_t                      mds1_cand_base_th_inter  = pruning_ctrls.mds1_cand_base_th_inter;
+    if (pcs->scs->static_config.psy_bias_mds0_intra_inter_mode_bias) {
+        const uint8_t             is_base                  = (pcs->ppcs->temporal_layer_index + pcs->scs->static_config.hierarchical_levels - pcs->ppcs->hierarchical_levels) == 0 ||
+                                                             pcs->ppcs->slice_type == I_SLICE;
+        const uint8_t             is_layer1                = (pcs->ppcs->temporal_layer_index + pcs->scs->static_config.hierarchical_levels - pcs->ppcs->hierarchical_levels) == 1;
+        if (mds1_cand_base_th_intra >= (mds1_cand_base_th_inter << 1) + mds1_cand_base_th_inter) {
+            if (is_base)          mds1_cand_base_th_intra += mds1_cand_base_th_inter;
+            else if (is_layer1)   ;
+            else                  mds1_cand_base_th_intra -= mds1_cand_base_th_inter;
+        }
+        else if (mds1_cand_base_th_intra >= mds1_cand_base_th_inter + (mds1_cand_base_th_inter >> 1)) {
+            if (is_base)          mds1_cand_base_th_intra += mds1_cand_base_th_inter >> 1;
+            else if (is_layer1)   ;
+            else                  mds1_cand_base_th_intra -= mds1_cand_base_th_inter >> 1;
+        }
+        else {
+            if (is_base)          mds1_cand_base_th_intra += mds1_cand_base_th_inter >> 2;
+            else if (is_layer1)   ;
+            else                  mds1_cand_base_th_intra -= mds1_cand_base_th_inter >> 2;
+        }
+    }
+                                  mds1_cand_base_th_intra  = (mds1_cand_base_th_intra * q_weight) / 1000;
+                                  mds1_cand_base_th_inter  = (mds1_cand_base_th_inter * q_weight) / 1000;
     ModeDecisionCandidateBuffer **cand_bf_arr              = ctx->cand_bf_ptr_array;
     for (CandClass cidx = CAND_CLASS_0; cidx < CAND_CLASS_TOTAL; cidx++) {
         const uint64_t mds1_cand_th = is_intra_class(cidx) ? mds1_cand_base_th_intra : mds1_cand_base_th_inter;

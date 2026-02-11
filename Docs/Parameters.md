@@ -106,6 +106,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasDisableMe8x8**          | --psy-bias-disable-me-8x8   | [0-1]                          | 0           | Disable me 8x8 and tf 8x8 pred                                                                                |
 | **PsyBiasDisableSGRPROJ**        | --psy-bias-disable-sgrproj  | [0-1]                          | 0           | Disable SGRPROJ in restoration                                                                                |
 | **PsyBiasCoeffLvlOffset**        | --psy-bias-coeff-lvl-offset | [-3-3]                         | 0           | Offset `pcs->coeff_lvl`                                                                                       |
+| **PsyBiasmds0IntraInterModeBias** | --psy-bias-mds0-intra-inter-mode-bias | [0-1]               | 0           | Bias towards intra mode in base layers, and against intra mode in non base layers                             |
 | **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
 
 ### Noise level threshold
@@ -133,6 +134,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] disable detect high freq | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `--chroma-qm-min 11` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [md] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overwritten |
 | [md] use better `pic_obmc_level` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] variance skip taper | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
@@ -142,7 +144,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] variance 32x32 blk size bias | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
 | [md] variance 32x32 blk size taper | ✕ | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | |
 | [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [dlf] `--dlf-sharpness 7` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overwritten |
+| [dlf] `--dlf-sharpness 7` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
 | [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | | |
 | [cdef] chroma cdef distortion bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
 | [rest] `--psy-bias-disable-sgrproj 1` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
@@ -167,6 +169,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] no nic `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
 | [md] `--psy-bias-mds0-sad` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | Can be overwritten |
 | [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-mds0-intra-inter-mode-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
 | [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `1.0` | `3.0` | `3.0` | Can be overwritten |
 | [md] `--texture-ac-bias` | － | － | － | `4.0` | `8.0` | `8.0` | Can be overwritten |
