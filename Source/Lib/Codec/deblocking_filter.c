@@ -1082,8 +1082,16 @@ EbErrorType qp_based_dlf_param(PictureControlSet *pcs, int32_t *filter_level_y, 
     SequenceControlSet *scs     = pcs->scs;
     FrameHeader        *frm_hdr = &pcs->ppcs->frm_hdr;
 
-    const int32_t min_filter_level = 0;
-    const int32_t max_filter_level = MAX_LOOP_FILTER;
+    int32_t min_filter_level;
+    int32_t max_filter_level;
+    if (!pcs->scs->static_config.dlf_bias) {
+        min_filter_level = 0;
+        max_filter_level = MAX_LOOP_FILTER;
+    }
+    else {
+        min_filter_level = pcs->scs->static_config.dlf_bias_min_dlf[1];
+        max_filter_level = pcs->scs->static_config.dlf_bias_max_dlf[1];
+    }
     const int32_t q                = svt_aom_ac_quant_qtx(
         frm_hdr->quantization_params.base_q_idx, 0, (EbBitDepth)scs->static_config.encoder_bit_depth);
     // These values were determined by linear fitting the result of the
