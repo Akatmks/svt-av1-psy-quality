@@ -1,11 +1,11 @@
 Experimental additions currently available on `exp`:
 - `--chroma-grain`
 - `--alt-tf-decay`
-- `--variance-md-bias` ([@Akatmks](https://github.com/Akatmks))
-- `--cdef-bias` ([@Akatmks](https://github.com/Akatmks))
-- `--chroma-qmc-bias` ([@Akatmks](https://github.com/Akatmks))
-- `--texture-preserving-qmc-bias` ([@Akatmks](https://github.com/Akatmks))
-- `--balancing-q-bias` ([@Akatmks](https://github.com/Akatmks))
+- `--lineart-psy-bias`, `--texture-psy-bias` family ([@Akatmks](https://github.com/Akatmks))
+- `--balancing-q-bias` family ([@Akatmks](https://github.com/Akatmks))
+- `--texture-ac-bias` and `--texture-energy-bias` ([@Akatmks](https://github.com/Akatmks))
+- `--dlf-bias` family ([@Akatmks](https://github.com/Akatmks))
+- `--cdef-bias` family ([@Akatmks](https://github.com/Akatmks))
 - `--noise-level-thr` ([@Akatmks](https://github.com/Akatmks))
 - `--noise-level-q-bias` ([@Akatmks](https://github.com/Akatmks))
 

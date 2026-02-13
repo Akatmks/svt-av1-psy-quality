@@ -91,7 +91,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **MaxChromaQmLevel**             | --chroma-qm-max             | [0-15]                         | 15          | Max chroma quant matrix flatness                                                                              |
 | **NoiseNormStrength**            | --noise-norm-strength       | [0-4]                          | 1           | Selectively boost AC coefficients to improve fine detail retention in certain circumstances                   |
 | **AcBias**                       | --ac-bias                   | [0.0-8.0]                      | 1.0         | Sets the strength of the internal RD metric to bias toward high-frequency error (helps with texture preservation and film grain retention) |
-| **TextureAcBias**                | --texture-ac-bias           | [0.0-64.0]                     | same as `--ac-bias` | `--ac-bias` strength if variance is lower than thresholds derived from `--texture-variance-thr`.      |
+| **TextureAcBias**                | --texture-ac-bias           | [0.0-64.0]                     | same as `--ac-bias` | `--ac-bias` strength in low variance regions. Application based on `--texture-variance-thr`, and protection based on `--lineart-variance-thr`. |
 | **TextureEnergyBias**            | --texture-energy-bias       | [1.0-1.5]                      | 1.0         | Prefer higher energy even if it will have higher energy than the source. Application based on `--texture-variance-thr`, and protection based on `--lineart-variance-thr`. |
 | **TxBias**                       | --tx-bias                   | [0-3]                          | 0           | Transform size/type bias mode [0: disabled, 1: full, 2: transform size only, 3: interpolation filter only]    |
 | **HBDMDS**                       | --hbd-mds                   | [0-3]                          | 0           | Activation of high bit depth mode decision (0: default behavior, 1: full 10b MD, 2: hybrid 8/10b MD, 3: full 8b MD) |
@@ -118,82 +118,105 @@ Instead, you can use this parameter to control this threshold so that certain fe
 To adjust the noise level, use `--noise-level-thr -2` to run a short test encode. This will print the detected noise level for each frame. You can then set the threshold between the frames you want features to be enabled and frames you want features to be disabled.
 Try not to deviate too much from the default threshold, which is `16000` as of early 2026. This noise level detection is connected to various features in mode decision and other parts of the encoder in addition to CDEF and restoration.  
 
-### Lineart Psy Bias
+### `--lineart-psy-bias`
 
 | `--lineart-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
-| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [pd] `--startup-mg-size` adjustment | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overwritten |
-| [me] `--psy-bias-disable-warped-motion 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [me] `--psy-bias-disable-me-8x8 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `8.0` | `10.0` | `10.0` | `12.0` | `12.0` | Applied when `--balancing-q-bias 1`; Can be overwritten |
-| [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [pd] `--startup-mg-size` adjustment | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
+| [me] `--psy-bias-disable-warped-motion 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [me] `--psy-bias-disable-me-8x8 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `8.0` | `10.0` | `10.0` | `12.0` | `12.0` | Applied when `--balancing-q-bias 1`; Can be overridden |
+| [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `chroma_qindex` bias | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] alternative high freq dev thr | ◯ | ◯ | － | － | － | － | － | |
 | [md] disable detect high freq | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--chroma-qm-min 11` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [md] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overwritten |
+| [md] `--chroma-qm-min 11` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] use better `pic_obmc_level` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] variance skip taper | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-intra-mode-bias` | ✕ | ✕ | `1` | `1` | `1` | `1` | `1` | Can be overwritten |
+| [md] `--psy-bias-intra-mode-bias` | ✕ | ✕ | `1` | `1` | `1` | `1` | `1` | Can be overridden |
 | [md] variance `bsize` bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
 | [md] variance 32x32 blk size bias | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
 | [md] variance 32x32 blk size taper | ✕ | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | |
 | [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [dlf] `--dlf-sharpness 7` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
+| [dlf] `--dlf-sharpness 7` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overridden |
 | [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | | |
 | [cdef] chroma cdef distortion bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [rest] `--psy-bias-disable-sgrproj 1` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
+| [rest] `--psy-bias-disable-sgrproj 1` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 
-### Texture Psy Bias
+To use `--lineart-psy-bias`, select a level based on how much effort you want to spend on lineart retention. Specifically:  
+* `--lineart-psy-bias 3` is generally good for all sources, especially sources without weak lineart and easier to handle.  
+* `--lineart-psy-bias 4` puts a little bit more focus on weak lineart retention than `--lineart-psy-bias 3`.  
+* `--lineart-psy-bias 5` and above is optimised for weak lineart retention. Some features here trade overall efficiency for better weak lineart retention, such as variance skip taper enabled at `--lineart-psy-bias 6` and variance 32x32 blk size taper enabled at `--lineart-psy-bias 7`.  
 
-| `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` & `7` | Note |
-| :-- | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
-| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `10.0` | `12.0` | `12.0` | `16.0` | Applied when `--balancing-q-bias 1`; Can be overwritten |
-| [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Applied when `--balancing-q-bias 1`; Can be overwritten |
-| [rc] `--balancing-tpl-intra-mode-beta-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
-| [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [rc] `chroma_qindex` bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
-| [md] disable detect high freq | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [md] allow HVA/HVB at p2 or slower | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
-| [md] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overwritten |
-| [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
-| [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
-| [md] no nic `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-mds0-sad` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | Can be overwritten |
-| [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-mds0-intra-inter-mode-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
-| [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overwritten |
-| [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `1.0` | `3.0` | `3.0` | Can be overwritten |
-| [md] `--texture-ac-bias` | － | － | － | `4.0` | `8.0` | `8.0` | Can be overwritten |
-| [md] `--texture-energy-bias` | `1.00` | `1.00` | `1.02` | `1.02` | `1.10` | `1.10` | Can be overwritten |
-| [md] variance obmc decision | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-inter-mode-bias` | ✕ | ✕ | `1` | `1` | `1` | `2` | Can be overwritten |
-| [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | |
-| [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
+A parameter worthy of attention is `--dlf-sharpness 7`. It is only enabled at a high `--lineart-psy-bias 6` level because it's highly clean source specific. Using this on texture heavy or noisy sources will result in a ton of blocking, but on the other hand, it's very, very good on clean source. You should enable this as well as `--noise-norm-strength 0` if you're encoding a clean source no matter what `--lineart-psy-bias` level you use.  
+
+Additionally, `--qm-min` and `--chroma-qm-min` can be adjusted as well for each sources for better quality. Lower `--dlf-bias-max-dlf` and `--cdef-bias-max-cdef` will be helpful on clean sources for better retention as well.  
+
+You should use `--lineart-variance-thr` to adjust the threshold above which a detail will be treated as lineart. On clean source, you want the `--lineart-variance-thr` to cover the weak lineart you want to protect. On noisy sources, weak lineart doesn't quite perform like lineart and performs more like texture, so it might not be needed to adjust the threshold. Regarding how to adjust the variance threshold, check [`--lineart-variance-thr` and `--texture-variance-thr` calculation](#--lineart-variance-thr-and---texture-variance-thr-calculation).  
+
+### `--texture-psy-bias`
+
+| `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
+| :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
+| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `10.0` | `12.0` | `12.0` | `16.0` | `16.0` | Applied when `--balancing-q-bias 1`; Can be overridden |
+| [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Applied when `--balancing-q-bias 1`; Can be overridden |
+| [rc] `--balancing-tpl-intra-mode-beta-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `chroma_qindex` bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+| [md] disable detect high freq | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] allow HVA/HVB at p2 or slower | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
+| [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
+| [md] no nic `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-mds0-sad 1` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overridden |
+| [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-mds0-intra-inter-mode-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
+| [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
+| [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `1.0` | `3.0` | `3.0` | `3.0` | Can be overridden |
+| [md] `--texture-ac-bias` | － | － | － | `3.0` | `8.0` | `8.0` | `8.0` | Can be overridden |
+| [md] `--texture-energy-bias` | `1.00` | `1.00` | `1.02` | `1.02` | `1.10` | `1.10` | `1.10` | Can be overridden |
+| [md] variance obmc decision | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-inter-mode-bias` | ✕ | ✕ | `1` | `1` | `1` | `2` | `2` | Can be overridden |
+| [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [dlf] `--dlf-bias-max-dlf 6,2` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [dlf] `--dlf-bias-min-dlf 0,0` | ✕ | ✕ | ◯ | ◯ | ✕ | ✕ | ◯ | Can be overridden |
+| [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
+| [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+
+To use `--texture-psy-bias`, select a level based on how much effort you want to spend on texture retention. Specifically:  
+* `--texture-psy-bias 2` is fine to use on sources with little texture.  
+* `--texture-psy-bias 3` puts a little bit of focus on texture, and can be used on sources with occasional texture.  
+* `--texture-psy-bias 4` is suitable for sources with detailed texture. At this level, it starts to harm especially weak lineart in clean sources a little bit, but should still generally be fine for most sources.  
+* `--texture-psy-bias 5` and above is suitabled for encodes where texture retention is a great priority, or when the source is very texture heavy.  
+
+There are a lot of `-psy-bias` features that're isolated into individually togglable parameters. For example, a properly set `--noise-norm-strength` to the source will help regardless which `--texture-psy-bias` levels you use. If noise in the source is very bad, and you can't perform filtering to stabilise the noise, you might want to increase `--psy-bias-inter-mode-bias`. If entire frame of the source is covered by a layer of texture, then features like `--psy-bias-mds0-intra-inter-mode-bias 1` and `--psy-bias-mds0-sad 1` might become very handy.  
+
+In addition to the parameters set here, you're recommended to use `--enable-cdef 0` whenever your source and your target filesize permits, which will help greatly with texture retention. You should also lower `--dlf-bias-max-dlf` and `--dlf-bias-min-dlf` as much as your source allows.  
+
+On noisy sources with dynamic details instead of static texture, individual parameters here might need to be adjusted, most importantly, `--balancing-r0-dampening-layer`, as well as all the biases related to intra / inter mode and `--texture-energy-bias`. `--dlf-bias` might need to be adjusted as well if the blocking becomes too bad.  
 
 ### `--lineart-variance-thr` and `--texture-variance-thr` calculation
 
 Variance bias is based on internal `pcs->ppcs->variance` value calculated for each block. Sharp edges such as strong linearts will have high variance, while texture and weak linearts will have small variance.  
-To understand what `pcs->ppcs->variance` is like, you can use `--variance-md-bias` on a completely still scene, and observe in a frame that's not the keyframe, and see which blocks are allowed to skip or not. This should correspond to the the number displayed as `variance md skip taper threshold` in encoder prinout. Only blocks with variance below the `variance md skip taper threshold` printout are allowed to skip.  
+To understand what `pcs->ppcs->variance` is like, you can use `--lineart-psy-bias -2` on a completely still and clean scene. You can check any frame that's not a keyframe in [aomanalyzer](https://pengbins.github.io/aomanalyzer.io/), and by seeing which blocks are allowed to skip or not, you can know whether your currently set `--lineart-variance-thr` can cover the weak lineart you want.  
 
-The `--variance-md-bias-thr` commandline parameter specify the threshold that will be used in various variance based bias and tapers.  
-Note that this commandline parameter is not raw `pcs->ppcs->variance` value! Use `pow(2, variance-md-bias-thr) - 1` to convert `--variance-md-bias-thr` to `pcs->ppcs->variance` value. As an example, the default `--variance-md-bias-thr` commandline parameter is `6.5`. This is converted to `pcs->ppcs->variance` value via `pow(2, 6.5) - 1`, which is `89.51`, which gets cut off to integer to `89`.  
-Internally this value is converted several times to different thresholds for different bias.  
-In general, anything above `variance_md_bias_thr >> 1`-ish is treated as strong linearts, anything between `variance_md_bias_thr >> 1` and `variance_md_bias_thr >> 3` is the inbetween area, and anything below `variance_md_bias_thr >> 3`-ish is treated as texture.  
-You can search for `static_config.variance_md_bias_thr` variable in the code for how each individual threshold are calculated. Do note that these thresholds are still being tested out in encodes, and we might readjust individual thresholds in the future.  
+The `--lineart-variance-thr` and `--texture-variance-thr` commandline parameter specify the threshold that will be used in various variance based biases and tapers in the `-psy-bias` system.  
+Note that these commandline parameters are not using raw `pcs->ppcs->variance` value. You can use `pow(2, lineart_variance_thr) - 1` and `pow(2, texture_variance_thr) - 1` to convert commandline value to raw `pcs->ppcs->variance` value. These are displayed in encoder printout as `variance base thr`.  
+Based on these base threshold, internally, the encoder convert this value several times to get the different threshold for different biases and tapers. Commonly anything that's above `"variance base thr" >> 1` is treated as strong lineart, the region between `"variance base thr" >> 1` and `"variance base thr" >> 2` is considered the inbetween area, while anything below `"variance base thr" >> 2` is treated as texture. These two thresholds are also displayed in the encoder printout as `variance common thr`. Specifically when you're using `--lineart-psy-bias -2` to test skip taper, or if you're actually using skip taper in encode with `--lineart-psy-bias [>= 6]`, the actual threshold used in the skip taper decision is lineart's `variance common thr`.  
 
 ## Rate Control Options
 

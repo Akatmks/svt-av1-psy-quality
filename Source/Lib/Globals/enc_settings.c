@@ -1023,8 +1023,31 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
     if (config->dlf_bias) {
-        if (config->dlf_bias_max_dlf[0] < config->dlf_bias_min_dlf[0] ||
-            config->dlf_bias_max_dlf[1] < config->dlf_bias_min_dlf[1]) {
+        uint8_t assumed_max_dlf[2];
+        uint8_t assumed_min_dlf[2];
+        memcpy(assumed_max_dlf, config->dlf_bias_max_dlf, 2 * sizeof(uint8_t));
+        memcpy(assumed_min_dlf, config->dlf_bias_min_dlf, 2 * sizeof(uint8_t));
+        if (assumed_max_dlf[0] == UINT8_DEFAULT) {
+            if (config->texture_psy_bias >= 4.0)
+                assumed_max_dlf[0] = 6;
+            else
+                assumed_max_dlf[0] = 8;
+        }
+        if (assumed_max_dlf[1] == UINT8_DEFAULT) {
+            assumed_max_dlf[1] = 2;
+        }
+        if (assumed_min_dlf[0] == UINT8_DEFAULT) {
+            if ((config->texture_psy_bias >= 3.0 && config->texture_psy_bias < 5.0) ||
+                (config->texture_psy_bias >= 7.0))
+                assumed_min_dlf[0] = 0;
+            else
+                assumed_min_dlf[0] = 2;
+        }
+        if (assumed_min_dlf[1] == UINT8_DEFAULT)
+            assumed_min_dlf[1] = 0;
+
+        if (assumed_max_dlf[0] < assumed_min_dlf[0] ||
+            assumed_max_dlf[1] < assumed_min_dlf[1]) {
             SVT_ERROR("Instance %u: dlf-bias-max-dlf must be greater than or equal to dlf-bias-min-dlf\n", channel_number + 1);
             SVT_ERROR("Instance %u: dlf-bias-max-dlf and dlf-bias-min-dlf are specified in the format of strength_y,strength_uv\n", channel_number + 1);
             return_error = EB_ErrorBadParameter;
@@ -1286,10 +1309,10 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
-    config_ptr->dlf_bias_max_dlf[0]               = 8;
-    config_ptr->dlf_bias_max_dlf[1]               = 2;
-    config_ptr->dlf_bias_min_dlf[0]               = 2;
-    config_ptr->dlf_bias_min_dlf[1]               = 0;
+    config_ptr->dlf_bias_max_dlf[0]               = UINT8_DEFAULT;
+    config_ptr->dlf_bias_max_dlf[1]               = UINT8_DEFAULT;
+    config_ptr->dlf_bias_min_dlf[0]               = UINT8_DEFAULT;
+    config_ptr->dlf_bias_min_dlf[1]               = UINT8_DEFAULT;
     config_ptr->cdef_bias                         = 0;
     config_ptr->cdef_bias_max_cdef[0]             = 4;
     config_ptr->cdef_bias_max_cdef[1]             = 1;

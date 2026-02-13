@@ -222,7 +222,7 @@ double get_psy_bias_effective_ac_bias(PictureControlSet *pcs, ModeDecisionContex
 
     const uint16_t blk_variance = get_variance_for_cu_16x16_min(ctx->blk_geom, pcs->ppcs->variance[ctx->sb_index]);
 
-    if (blk_variance >= pcs->scs->static_config.texture_variance_thr >> 1)
+    if (blk_variance >= pcs->scs->static_config.lineart_variance_thr >> 1)
         return effective_ac_bias;
     else if (blk_variance >= pcs->scs->static_config.texture_variance_thr >> 2)
         return effective_ac_bias * ((double)2/3) + effective_texture_ac_bias * ((double)1/3);

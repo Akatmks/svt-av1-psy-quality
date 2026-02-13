@@ -7827,7 +7827,7 @@ static void post_mds0_nic_pruning(PictureControlSet *pcs, ModeDecisionContext *c
 
     uint64_t                      mds1_class_th[4];
     mds1_class_th[0] = mds1_class_th[1] = mds1_class_th[2] = mds1_class_th[3] = (pruning_ctrls.mds1_class_th * q_weight) / 1000;
-    if (pcs->scs->static_config.texture_psy_bias >= 4.0)
+    if (pcs->scs->static_config.texture_psy_bias >= 4.0 && pcs->enc_mode <= ENC_M6)
         mds1_class_th[1]                                   = (uint64_t)~0;
     uint8_t                       mds1_band_cnt            = pruning_ctrls.mds1_band_cnt;
     uint16_t                      mds1_cand_th_rank_factor = pruning_ctrls.mds1_cand_th_rank_factor;
@@ -7931,7 +7931,7 @@ static void post_mds1_nic_pruning(PictureControlSet *pcs, ModeDecisionContext *c
     const uint64_t                mds2_cand_th         = (pruning_ctrls.mds2_cand_base_th * q_weight) / 1000;
     uint64_t                      mds2_class_th[4];
     mds2_class_th[0] = mds2_class_th[1] = mds2_class_th[2] = mds2_class_th[3] = (pruning_ctrls.mds2_class_th * q_weight) / 1000;
-    if (pcs->scs->static_config.texture_psy_bias >= 4.0)
+    if (pcs->scs->static_config.texture_psy_bias >= 4.0 && pcs->enc_mode <= ENC_M6)
         mds2_class_th[1]                               = (uint64_t)~0;
     const uint8_t                 mds2_band_cnt        = pruning_ctrls.mds2_band_cnt;
     const uint16_t                mds2_relative_dev_th = pruning_ctrls.mds2_relative_dev_th;
@@ -8013,7 +8013,7 @@ static void post_mds2_nic_pruning(PictureControlSet *pcs, ModeDecisionContext *c
     const uint64_t                mds3_cand_th  = (pruning_ctrls.mds3_cand_base_th * q_weight) / 1000;
     uint64_t                      mds3_class_th[4];
     mds3_class_th[0] = mds3_class_th[1] = mds3_class_th[2] = mds3_class_th[3] = (pruning_ctrls.mds3_class_th * q_weight) / 1000;
-    if (pcs->scs->static_config.texture_psy_bias >= 4.0)
+    if (pcs->scs->static_config.texture_psy_bias >= 4.0 && pcs->enc_mode <= ENC_M6)
         mds3_class_th[1]                        = (uint64_t)~0;
     const uint8_t                 mds3_band_cnt = pruning_ctrls.mds3_band_cnt;
     ModeDecisionCandidateBuffer **cand_bf_arr   = ctx->cand_bf_ptr_array;

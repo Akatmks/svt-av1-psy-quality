@@ -4116,7 +4116,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         if (scs->static_config.texture_psy_bias >= 5.0)
             scs->static_config.texture_ac_bias = 8.0;
         else if (scs->static_config.texture_psy_bias >= 4.0)
-            scs->static_config.texture_ac_bias = 4.0;
+            scs->static_config.texture_ac_bias = 3.0;
         else
             scs->static_config.texture_ac_bias = scs->static_config.ac_bias;
     }
@@ -4159,6 +4159,24 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else
             scs->static_config.dlf_sharpness = CLIP3(0, 7, scs->static_config.sharpness);
     }
+    if (scs->static_config.dlf_bias_max_dlf[0] == UINT8_DEFAULT) {
+        if (scs->static_config.texture_psy_bias >= 4.0)
+            scs->static_config.dlf_bias_max_dlf[0] = 6;
+        else
+            scs->static_config.dlf_bias_max_dlf[0] = 8;
+    }
+    if (scs->static_config.dlf_bias_max_dlf[1] == UINT8_DEFAULT) {
+        scs->static_config.dlf_bias_max_dlf[1] = 2;
+    }
+    if (scs->static_config.dlf_bias_min_dlf[0] == UINT8_DEFAULT) {
+        if ((scs->static_config.texture_psy_bias >= 3.0 && scs->static_config.texture_psy_bias < 5.0) ||
+            scs->static_config.texture_psy_bias >= 7.0)
+            scs->static_config.dlf_bias_min_dlf[0] = 0;
+        else
+            scs->static_config.dlf_bias_min_dlf[0] = 2;
+    }
+    if (scs->static_config.dlf_bias_min_dlf[1] == UINT8_DEFAULT)
+        scs->static_config.dlf_bias_min_dlf[1] = 0;
 
     if (scs->static_config.cdef_level != 0 && scs->static_config.cdef_bias) {
         if (!(scs->static_config.cdef_level == DEFAULT || scs->static_config.cdef_level == 1) ||

@@ -8505,7 +8505,8 @@ uint8_t svt_aom_get_obmc_level(EncMode enc_mode, uint32_t qp, uint8_t is_base, u
         obmc_level = 1;
     else if (lineart_psy_bias >= 3.0 && enc_mode <= ENC_M4)
         obmc_level = 2;
-    else if (enc_mode <= ENC_M4)
+    else if (enc_mode <= ENC_M4 ||
+             (lineart_psy_bias >= 3.0 && enc_mode <= ENC_M6))
         obmc_level = 3;
     else if (enc_mode <= ENC_M7)
         obmc_level = 4;
