@@ -1092,6 +1092,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
+    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.75) &&
+        config->balancing_luminance_lambda_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.75\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+
     if ((config->balancing_r0_based_layer < -5 || config->balancing_r0_based_layer > 0) &&
         config->balancing_r0_based_layer != INT8_MAX) {
         SVT_ERROR("Instance %u: balancing-r0-based-layer must be between -5 and 0\n", channel_number + 1);
@@ -1328,6 +1334,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->balancing_r0_based_layer          = INT8_DEFAULT;
     config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
     config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
+    config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
     config_ptr->balancing_tpl_intra_mode_beta_bias = UINT8_DEFAULT;
     config_ptr->noise_level_q_bias                = 1.0;
     config_ptr->sharp_tx                          = 1;
@@ -2856,6 +2863,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         double     *out;
     } double_opts[] = {
         {"qp-scale-compress-strength", &config_struct->qp_scale_compress_strength},
+        {"balancing-luminance-lambda-bias", &config_struct->balancing_luminance_lambda_bias},
         {"ac-bias", &config_struct->ac_bias},
         {"texture-ac-bias", &config_struct->texture_ac_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},

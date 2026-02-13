@@ -4022,7 +4022,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     }
 
     if (scs->static_config.balancing_luminance_q_bias == UINT8_DEFAULT) {
-        if (scs->static_config.balancing_q_bias)
+        if (scs->static_config.balancing_q_bias) {
             if (scs->static_config.texture_psy_bias >= 6.0)
                 scs->static_config.balancing_luminance_q_bias = 160;
             else if (scs->static_config.lineart_psy_bias >= 6.0 ||
@@ -4033,8 +4033,21 @@ static void set_param_based_on_input(SequenceControlSet *scs)
                 scs->static_config.balancing_luminance_q_bias = 100;
             else
                 scs->static_config.balancing_luminance_q_bias = 80;
+        }
         else
             scs->static_config.balancing_luminance_q_bias     = 0;
+    }
+    if (scs->static_config.balancing_luminance_lambda_bias == DEFAULT) {
+        if (scs->static_config.balancing_q_bias) {
+            if ((scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 60) // --crf 15.00
+                scs->static_config.balancing_luminance_lambda_bias = 0.50;
+            else if ((scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 80) // --crf 20.00
+                scs->static_config.balancing_luminance_lambda_bias = 0.25;
+            else
+                scs->static_config.balancing_luminance_lambda_bias = 0.0;
+        }
+        else
+            scs->static_config.balancing_luminance_lambda_bias = 0.0;
     }
 
     if (scs->static_config.balancing_tpl_intra_mode_beta_bias == UINT8_DEFAULT) {
@@ -4509,7 +4522,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.enable_variance_boost             ||
         scs->static_config.lineart_psy_bias >= 1.0           ||
         scs->static_config.texture_psy_bias >= 1.0           ||
-        scs->static_config.balancing_luminance_q_bias)
+        scs->static_config.balancing_luminance_q_bias        ||
+        scs->static_config.balancing_luminance_lambda_bias)
         scs->calculate_variance = 1;
     else if (scs->static_config.enc_mode <= ENC_M6)
         scs->calculate_variance = 1;
@@ -4992,6 +5006,8 @@ static void copy_api_from_app(
     scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
     // Balancing luminance Q bias
     scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
+    // Balancing luminance lambda bias
+    scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
 
     // Balancing r0-based layer
     scs->static_config.balancing_r0_based_layer = config_struct->balancing_r0_based_layer;

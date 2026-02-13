@@ -249,6 +249,7 @@
 #define CDEF_BIAS_DAMPING_OFFSET_TOKEN "--cdef-bias-damping-offset"
 #define BALANCING_Q_BIAS_TOKEN "--balancing-q-bias"
 #define BALANCING_LUMINANCE_Q_BIAS_TOKEN "--balancing-luminance-q-bias"
+#define BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN "--balancing-luminance-lambda-bias"
 #define BALANCING_R0_BASED_LAYER_TOKEN "--balancing-r0-based-layer"
 #define BALANCING_R0_DAMPENING_LAYER_TOKEN "--balancing-r0-dampening-layer"
 #define BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN "--balancing-tpl-intra-mode-beta-bias"
@@ -1489,6 +1490,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Balancing luminance Q bias [0.0-25.0]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN,
+     "[PSY] Balancing luminance lambda bias [0.0-0.75]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN,
      "[PSY] Boost a Super Block if TPL search result favours intra instead of inter prediction modes, default is 1 [0-1]",
      set_cfg_generic_token},
@@ -1781,6 +1786,8 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, BALANCING_Q_BIAS_TOKEN, "BalancingQBias", set_cfg_generic_token},
     // Balancing Luminance Q Bias
     {SINGLE_INPUT, BALANCING_LUMINANCE_Q_BIAS_TOKEN, "BalancingLuminanceQBias", set_cfg_generic_token},
+    // Balancing Luminance Lambda Bias
+    {SINGLE_INPUT, BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN, "BalancingLuminanceLambdaBias", set_cfg_generic_token},
 
     // Balancing r0-based Layer
     {SINGLE_INPUT, BALANCING_R0_BASED_LAYER_TOKEN, "BalancingR0BasedLayer", set_cfg_generic_token},

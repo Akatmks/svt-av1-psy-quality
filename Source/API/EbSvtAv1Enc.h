@@ -438,7 +438,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /* Initial quantization parameter for the Intra pictures used under constant
      * qp rate control mode.
      *
-     * Default is 50. */
+     * Default is 35. */
     uint32_t qp;
 
     /* force qp values for every picture that are passed in the header pointer
@@ -1210,6 +1210,13 @@ typedef struct EbSvtAv1EncConfiguration {
      * Calculated from `--balancing-luminance-q-bias` commandline parameter via `"balancing-luminance-q-bias" * 10`.
      */
     uint8_t balancing_luminance_q_bias;
+    /**
+     * @brief Enable balancing luminance lambda bias
+     * Min value is 0.0
+     * Max value is 0.75
+     * 0.0: disabled
+     */
+    double balancing_luminance_lambda_bias;
 
     /**
      * @brief Frames with temporal layer lower than or equal to hierarchical levels + `--balancing-r0-based-layer` will use r0-based QPS QPM.
@@ -1304,9 +1311,9 @@ typedef struct EbSvtAv1EncConfiguration {
     Bool alt_tf_decay;
 
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
-    uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
+    // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    - 2 * sizeof(Bool) - 23 * sizeof(uint8_t) - 8 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 5 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 23 * sizeof(uint8_t) - 8 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 6 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 
