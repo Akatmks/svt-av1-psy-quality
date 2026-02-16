@@ -16,6 +16,7 @@
 #include "lambda_rate_tables.h"
 #include "rc_process.h"
 #include "enc_mode_config.h"
+#include "segmentation.h"
 
 void set_block_based_depth_refinement_controls(ModeDecisionContext *ctx, uint8_t block_based_depth_refinement_level);
 static void mode_decision_context_dctor(EbPtr p) {
@@ -536,15 +537,30 @@ static void av1_lambda_assign_md(PictureControlSet *pcs, ModeDecisionContext *ct
         }
     }
 
-    if (pcs->scs->static_config.balancing_luminance_lambda_bias) {
+    if (pcs->scs->static_config.balancing_luminance_lambda_bias ||
+        pcs->scs->static_config.balancing_texture_lambda_bias) {
+        // luminance
         const int32_t balancing_luminance_bias_base = CLIP3(0x50, 0x70, pcs->ppcs->avg_luma);
-        const double balancing_luminance_bias = 1.0 - CLIP3(0, 0x40, balancing_luminance_bias_base - pcs->ppcs->balancing_luminance[ctx->sb_index]) *
-                                                      (((double)1/0x40) * pcs->scs->static_config.balancing_luminance_lambda_bias);
-        if (balancing_luminance_bias != 1.0) {
-            ctx->full_lambda_md[0] = lrint(ctx->full_lambda_md[0] * balancing_luminance_bias);
-            ctx->fast_lambda_md[0] = lrint(ctx->fast_lambda_md[0] * balancing_luminance_bias);
-            ctx->full_lambda_md[1] = lrint(ctx->full_lambda_md[1] * balancing_luminance_bias);
-            ctx->fast_lambda_md[1] = lrint(ctx->fast_lambda_md[1] * balancing_luminance_bias);
+        double balancing_bias = CLIP3(0, 0x40, balancing_luminance_bias_base - pcs->ppcs->balancing_luminance[ctx->sb_index]) *
+                                (((double)1/0x40) * pcs->scs->static_config.balancing_luminance_lambda_bias);
+        // texture
+        const uint16_t blks_variance = get_variance_for_cu_max_32x32_min(NULL, pcs->ppcs->variance[ctx->sb_index]);
+        if (blks_variance >= pcs->scs->static_config.texture_variance_thr >> 2)
+            ;
+        else if (blks_variance >= pcs->scs->static_config.texture_variance_thr >> 3)
+            balancing_bias = AOMMAX(pcs->scs->static_config.balancing_texture_lambda_bias * 0.5,
+                                    balancing_bias);
+        else
+            balancing_bias = AOMMAX(pcs->scs->static_config.balancing_texture_lambda_bias,
+                                    balancing_bias);
+
+        balancing_bias = 1.0 - balancing_bias;
+
+        if (balancing_bias != 1.0) {
+            ctx->full_lambda_md[0] = lrint(ctx->full_lambda_md[0] * balancing_bias);
+            ctx->fast_lambda_md[0] = lrint(ctx->fast_lambda_md[0] * balancing_bias);
+            ctx->full_lambda_md[1] = lrint(ctx->full_lambda_md[1] * balancing_bias);
+            ctx->fast_lambda_md[1] = lrint(ctx->fast_lambda_md[1] * balancing_bias);
         }
     }
 

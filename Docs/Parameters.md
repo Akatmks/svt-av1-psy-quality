@@ -84,12 +84,13 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **KeyframeTemporalFilteringStrength** | --kf-tf-strength       | [0-4]                          | 1           | Manually adjust temporal filtering strength for keyframes. Higher values = stronger temporal filtering        |
 | **FilteringNoiseDetection**      | --filtering-noise-detection | [0-4]                          | 0           | Controls noise detection which disables CDEF/restoration when noise level is high enough, enabled by default on tunes 0 and 3 [0: default tune behavior, 1: on, 2: off, 3: on (CDEF only), 4: on (restoration only)] |
 | **NoiseLevelThr**                | --noise-level-thr           | [-2-`(2^31)-1`]                | -1          | Change encoder noise level threshold. Further explanations can be found below. [-1: default encoder behaviour, -2: print the noise level for each frame, >0: set the noise level threshold] |
-| **BalancingQBias**               | --balancing-q-bias               | [0-1]      | 0           | Enable balancing Q bias. Balancing Q bias biases the TPL system on both per frame and per Super Block level for better detail retention.             |
-| **BalancingLuminanceQBias**      | --balancing-luminance-q-bias     | [0.0-25.0] | 0.0         | Enable balancing luminance Q bias. Boost Super Block with low luminance via beta. Recommended to be used with `--balancing-q-bias` but can be used without. [0: disabled, 8.0: default with `--balancing-q-bias 1`] |
-| **BalancingLuminanceLambdaBias** | --balancing-luminance-lambda-bias | [0.0-0.75] | 0.0        | Enable balancing luminance lambda bias. Bias lambda in mode decision in super block with low luminance. [0: default encoder behaviour, 0.25: default with `--balancing-q-bias 1 --crf [<= 20.00]`, 0.50: default with `--balancing-q-bias 1 --crf [<= 15.00]`] |
-| **BalancingR0BasedLayer**        | --balancing-r0-based-layer       | [-5-0]     | -3          | Frames with temporal layer lower than or equal to hierarchical levels + `--balancing-r0-based-layer` will use r0-based QPS QPM. This affects a wide range of features and can be used without `--balancing-q-bias`. It's recommended not to change this parameter when using `--balancing-q-bias 1` [-3: default encoder behaviour, 0: default with `--balancing-q-bias 1`] |
-| **BalancingR0DampeningLayer**    | --balancing-r0-dampening-layer   | [-5-1]     | 1           | Dampen r0-based boosting in frames with temporal layer higher than or equal to hierarchical levels + `--balancing-r0-dampening-layer`. This affects a wide range of features and can be used without `--balancing-q-bias`. [1: disabled, -2: default with `--balancing-q-bias 1`] |
-| **BalancingTPLIntraModeBetaBias** | --balancing-tpl-intra-mode-beta-bias | [0-1] | 1           | Boost a Super Block if TPL search result favours intra instead of inter prediction modes. Requires `--balancing-q-bias 1`. [0: disabled [Default]]   |
+| **BalancingQBias**               | --balancing-q-bias          | [0-1]                          | 0           | Enable balancing Q bias. Balancing Q bias biases the TPL system on both per frame and per Super Block level for better detail retention.             |
+| **BalancingLuminanceQBias**      | --balancing-luminance-q-bias | [0.0-25.0]                    | 0.0         | Enable balancing luminance Q bias. Boost Super Block with low luminance via beta. Recommended to be used with `--balancing-q-bias` but can be used without. [0: disabled, 8.0: default with `--balancing-q-bias 1`] |
+| **BalancingLuminanceLambdaBias** | --balancing-luminance-lambda-bias | [0.0-0.9]                | 0.0         | Enable balancing luminance lambda bias. Bias lambda in mode decision in super block with low luminance. [0: default encoder behaviour] |
+| **BalancingTextureLambdaBias**   | --balancing-texture-lambda-bias | [0.0-0.9]                  | 0.0         | Enable balancing texture lambda bias. Bias lambda in low variance regions. [0: default encoder behaviour]     |
+| **BalancingR0BasedLayer**        | --balancing-r0-based-layer | [-5-0]                          | -3          | Frames with temporal layer lower than or equal to hierarchical levels + `--balancing-r0-based-layer` will use r0-based QPS QPM. This affects a wide range of features and can be used without `--balancing-q-bias`. It's recommended not to change this parameter when using `--balancing-q-bias 1` [-3: default encoder behaviour, 0: default with `--balancing-q-bias 1`] |
+| **BalancingR0DampeningLayer**    | --balancing-r0-dampening-layer | [-5-1]                      | 1           | Dampen r0-based boosting in frames with temporal layer higher than or equal to hierarchical levels + `--balancing-r0-dampening-layer`. This affects a wide range of features and can be used without `--balancing-q-bias`. [1: disabled, -2: default with `--balancing-q-bias 1`] |
+| **BalancingTPLIntraModeBetaBias** | --balancing-tpl-intra-mode-beta-bias | [0-1]                | 1            | Boost a Super Block if TPL search result favours intra instead of inter prediction modes. Requires `--balancing-q-bias 1`. [0: disabled [Default]] |
 | **EnableQM**                     | --enable-qm                 | [0-1]                          | 1           | Enable quantisation matrices                                                                                  |
 | **MinQmLevel**                   | --qm-min                    | [0-15]                         | 8           | Min quant matrix flatness                                                                                     |
 | **MaxQmLevel**                   | --qm-max                    | [0-15]                         | 15          | Max quant matrix flatness                                                                                     |
@@ -114,6 +115,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasCoeffLvlOffset**        | --psy-bias-coeff-lvl-offset | [-3-3]                         | 0           | Offset `pcs->coeff_lvl`                                                                                       |
 | **PsyBiasmds0IntraInterModeBias** | --psy-bias-mds0-intra-inter-mode-bias | [0-1]               | 0           | Bias towards intra mode in base layers, and against intra mode in non base layers                             |
 | **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
+| **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 
 ### Noise level threshold
 
@@ -201,7 +203,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [dlf] `--dlf-bias-min-dlf 0,0` | ✕ | ✕ | ◯ | ◯ | ✕ | ✕ | ◯ | Can be overridden |
 | [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
-| [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
+| [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 
 To use `--texture-psy-bias`, select a level based on how much effort you want to spend on texture retention. Specifically:  
 * `--texture-psy-bias 2` is fine to use on sources with little texture.  
@@ -223,6 +225,20 @@ To understand what `pcs->ppcs->variance` is like, you can use `--lineart-psy-bia
 The `--lineart-variance-thr` and `--texture-variance-thr` commandline parameter specify the threshold that will be used in various variance based biases and tapers in the `-psy-bias` system.  
 Note that these commandline parameters are not using raw `pcs->ppcs->variance` value. You can use `pow(2, lineart_variance_thr) - 1` and `pow(2, texture_variance_thr) - 1` to convert commandline value to raw `pcs->ppcs->variance` value. These are displayed in encoder printout as `variance base thr`.  
 Based on these base threshold, internally, the encoder convert this value several times to get the different threshold for different biases and tapers. Commonly anything that's above `"variance base thr" >> 1` is treated as strong lineart, the region between `"variance base thr" >> 1` and `"variance base thr" >> 2` is considered the inbetween area, while anything below `"variance base thr" >> 2` is treated as texture. These two thresholds are also displayed in the encoder printout as `variance common thr`. Specifically when you're using `--lineart-psy-bias -2` to test skip taper, or if you're actually using skip taper in encode with `--lineart-psy-bias [>= 6]`, the actual threshold used in the skip taper decision is lineart's `variance common thr`.  
+
+### `--high-fidelity-encode-psy-bias`
+
+`--high-fidelity-encode-psy-bias` is enabled by default with `--crf [<= 16.00]` and either `--lineart-psy-bias` or `--texture-psy-bias`.  
+
+* `--hierarchical-levels`: Default changed from `5` to `3`. Can be overridden.  
+* `--balancing-luminance-q-bias`: Add an additional `4.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
+* `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.5`. Can be overridden.  
+* `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.4`. Can be overridden.  
+* variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`. Change it from applying only in frames of higher temporals level to applying to frames of all temporal levels including base frames.  
+* `--psy-bias-disable-me-8x8`: Revert `--lineart-psy-bias [>= 2]` settings back to `0`. Can be overridden.  
+* `--dlf-bias-min-dlf`: Default changed to `0,0`.  
+* `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
+* `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
 ## Rate Control Options
 
@@ -441,6 +457,9 @@ SvtAv1EncApp -i in.y4m -b out.ivf --roi-map-file roi_map.txt
 | **CDEFBiasMaxCDEF**                | --cdef-bias-max-cdef   | any string       | `4,1,2,0`     | Max CDEF strength in the order of primary strength for Y, secondary strength for Y, primary strength for chroma, secondary strength for chroma. Primary strengths can be any value betwen `0` and `15`, and secondary strengths can be either `0`, `1`, `2`, or `4`. |
 | **CDEFBiasMinCDEF**                | --cdef-bias-min-cdef   | any string       | `0,0,0,0`     | Min CDEF strength in the order of primary strength for Y, secondary strength for Y, primary strength for chroma, secondary strength for chroma. Primary strengths can be any value betwen `0` and `15`, and secondary strengths can be either `0`, `1`, `2`, or `4`. CDEF strength of 0 will always be evaluated. |
 | **CDEFBiasMaxSecCDEFRel**          | --cdef-bias-max-sec-cdef-rel | [-12-4]    | 0             | Secondary CDEF strength of every filtering block should be smaller than or equal to primary CDEF strength plus this value.                                              |
+| **TextureCDEFBiasMaxCDEF**         | --texture-cdef-bias-max-cdef | any string | same as `--cdef-bias-max-cdef` | Max CDEF strength in low variance region. Using `--lineart-variance-thr`.                                                                              |
+| **TextureCDEFBiasMinCDEF**         | --texture-cdef-bias-min-cdef | any string | same as `--cdef-bias-min-cdef` | Min CDEF strength in low variance region. CDEF strength of 0 will always be evaluated. Using `--lineart-variance-thr`.                                 |
+| **TextureCDEFBiasMaxSecCDEFRel**   | --texture-cdef-bias-max-sec-cdef-rel | [-12-4] | same as `--cdef-bias-max-sec-cdef-rel` | Secondary CDEF strength of every filtering block should be smaller than or equal to primary CDEF strength plus this value in low variance region. Using `--lineart-variance-thr`. |
 | **CDEFBiasDampingOffset**          | --cdef-bias-damping-offset | [-4-8]       | 0             | Use bigger or smaller CDEF damping. CDEF damping is a CDEF feature (not a `--cdef-bias` feature), normally derived from each frame's `base_q_idx`.                      |
 
 #### **Super-Resolution**

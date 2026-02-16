@@ -10213,8 +10213,14 @@ static void init_block_data(PictureControlSet *pcs, ModeDecisionContext *ctx, co
     }
 
     ctx->cand_elimination_acceptable = 1;
-    if (blk_variance >= pcs->scs->static_config.lineart_variance_thr >> 2)
-        ctx->cand_elimination_acceptable = 0;
+    if (pcs->scs->static_config.high_fidelity_encode_psy_bias) {
+        if (blk_variance >= pcs->scs->static_config.lineart_variance_thr >> 1)
+            ctx->cand_elimination_acceptable = 0;
+    }
+    else {
+        if (blk_variance >= pcs->scs->static_config.lineart_variance_thr >> 2)
+            ctx->cand_elimination_acceptable = 0;
+    }
 }
 static void check_curr_to_parent_cost_light_pd0(SequenceControlSet *scs, PictureControlSet *pcs,
                                                 ModeDecisionContext *ctx, uint32_t *next_non_skip_blk_idx_mds,

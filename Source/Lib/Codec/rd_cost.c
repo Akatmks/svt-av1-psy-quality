@@ -1666,6 +1666,12 @@ static void psy_bias_apply(PictureControlSet *pcs, ModeDecisionContext *ctx, str
         *ssim_dist = (*ssim_dist * (8 + (1 << (pcs->scs->static_config.psy_bias_inter_mode_bias - 1)))) >> 3;
     }
 
+    // reverse bsize bias (?)
+    // if (pcs->scs->static_config.high_fidelity_encode_psy_bias) {
+    //     if (ctx->blk_geom->bheight < 16 || ctx->blk_geom->bwidth < 16)
+    //         *dist <<= 1;
+    // }
+
     // bsize bias
     const bool block_no_coeff = !cand_bf->y_has_coeff || (!cand_bf->u_has_coeff && !cand_bf->v_has_coeff);
     switch (ctx->bsize_bias_mode) {

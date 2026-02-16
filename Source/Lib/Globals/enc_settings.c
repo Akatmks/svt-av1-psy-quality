@@ -33,6 +33,165 @@
 #include <unistd.h>
 #endif
 
+EbErrorType svt_av1_verify_dlf_bias_max_min_dlf(EbSvtAv1EncConfiguration *source_config, EbSvtAv1EncConfiguration *target_config) {
+    EbErrorType return_error = EB_ErrorNone;
+
+    if (source_config != target_config) {
+        memcpy(target_config->dlf_bias_max_dlf, source_config->dlf_bias_max_dlf, 2 * sizeof(uint8_t));
+        memcpy(target_config->dlf_bias_min_dlf, source_config->dlf_bias_min_dlf, 2 * sizeof(uint8_t));
+    }
+
+    if (target_config->dlf_bias_max_dlf[0] == UINT8_DEFAULT) {
+        if (source_config->texture_psy_bias >= 4.0)
+            target_config->dlf_bias_max_dlf[0] = 6;
+        else
+            target_config->dlf_bias_max_dlf[0] = 8;
+    }
+    if (target_config->dlf_bias_max_dlf[1] == UINT8_DEFAULT) {
+        target_config->dlf_bias_max_dlf[1] = 2;
+    }
+    if (target_config->dlf_bias_min_dlf[0] == UINT8_DEFAULT) {
+        if ((source_config->texture_psy_bias >= 3.0 && source_config->texture_psy_bias < 5.0) ||
+            (source_config->texture_psy_bias >= 7.0))
+            target_config->dlf_bias_min_dlf[0] = 0;
+        else if (source_config->high_fidelity_encode_psy_bias)
+            target_config->dlf_bias_min_dlf[0] = 0;
+        else
+            target_config->dlf_bias_min_dlf[0] = 2;
+    }
+    if (target_config->dlf_bias_min_dlf[1] == UINT8_DEFAULT)
+        target_config->dlf_bias_min_dlf[1] = 0;
+
+    if (target_config->dlf_bias_max_dlf[0] < target_config->dlf_bias_min_dlf[0] ||
+        target_config->dlf_bias_max_dlf[1] < target_config->dlf_bias_min_dlf[1]) {
+        SVT_ERROR("dlf-bias-max-dlf must be greater than or equal to dlf-bias-min-dlf\n");
+        SVT_ERROR("dlf-bias-max-dlf and dlf-bias-min-dlf are specified in the format of strength_y,strength_uv\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
+    return return_error;
+}
+
+EbErrorType svt_av1_verify_cdef_bias_max_min_cdef(EbSvtAv1EncConfiguration *source_config, EbSvtAv1EncConfiguration *target_config) {
+    EbErrorType return_error = EB_ErrorNone;
+
+    if (source_config != target_config) {
+        memcpy(target_config->cdef_bias_max_cdef, source_config->cdef_bias_max_cdef, 4 * sizeof(uint8_t));
+        memcpy(target_config->cdef_bias_min_cdef, source_config->cdef_bias_min_cdef, 4 * sizeof(uint8_t));
+        memcpy(target_config->texture_cdef_bias_max_cdef, source_config->texture_cdef_bias_max_cdef, 4 * sizeof(uint8_t));
+        memcpy(target_config->texture_cdef_bias_min_cdef, source_config->texture_cdef_bias_min_cdef, 4 * sizeof(uint8_t));
+        target_config->cdef_bias_max_sec_cdef_rel = source_config->cdef_bias_max_sec_cdef_rel;
+        target_config->texture_cdef_bias_max_sec_cdef_rel = source_config->texture_cdef_bias_max_sec_cdef_rel;
+    }
+
+    if (target_config->cdef_bias_max_cdef[0] == UINT8_DEFAULT)
+        target_config->cdef_bias_max_cdef[0] = 4;
+    if (target_config->cdef_bias_max_cdef[1] == UINT8_DEFAULT) {
+        if (source_config->texture_psy_bias >= 4.0)
+            target_config->cdef_bias_max_cdef[1] = 0;
+        else
+            target_config->cdef_bias_max_cdef[1] = 1;
+    }
+    if (target_config->cdef_bias_max_cdef[2] == UINT8_DEFAULT)
+        target_config->cdef_bias_max_cdef[2] = 2;
+    if (target_config->cdef_bias_max_cdef[3] == UINT8_DEFAULT)
+        target_config->cdef_bias_max_cdef[3] = 0;
+
+    if (target_config->cdef_bias_min_cdef[0] == UINT8_DEFAULT)
+        target_config->cdef_bias_min_cdef[0] = 0;
+    if (target_config->cdef_bias_min_cdef[1] == UINT8_DEFAULT)
+        target_config->cdef_bias_min_cdef[1] = 0;
+    if (target_config->cdef_bias_min_cdef[2] == UINT8_DEFAULT)
+        target_config->cdef_bias_min_cdef[2] = 0;
+    if (target_config->cdef_bias_min_cdef[3] == UINT8_DEFAULT)
+        target_config->cdef_bias_min_cdef[3] = 0;
+
+    if (source_config->high_fidelity_encode_psy_bias) {
+        if (target_config->texture_cdef_bias_max_cdef[0] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[0] = 1;
+        if (target_config->texture_cdef_bias_max_cdef[1] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[1] = 0;
+        if (target_config->texture_cdef_bias_max_cdef[2] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[2] = 0;
+        if (target_config->texture_cdef_bias_max_cdef[3] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[3] = 0;
+
+        if (target_config->texture_cdef_bias_min_cdef[0] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[0] = 0;
+        if (target_config->texture_cdef_bias_min_cdef[1] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[1] = 0;
+        if (target_config->texture_cdef_bias_min_cdef[2] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[2] = 0;
+        if (target_config->texture_cdef_bias_min_cdef[3] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[3] = 0;
+    }
+    else {
+        if (target_config->texture_cdef_bias_max_cdef[0] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[0] = target_config->cdef_bias_max_cdef[0];
+        if (target_config->texture_cdef_bias_max_cdef[1] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[1] = target_config->cdef_bias_max_cdef[1];
+        if (target_config->texture_cdef_bias_max_cdef[2] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[2] = target_config->cdef_bias_max_cdef[2];
+        if (target_config->texture_cdef_bias_max_cdef[3] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_max_cdef[3] = target_config->cdef_bias_max_cdef[3];
+
+        if (target_config->texture_cdef_bias_min_cdef[0] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[0] = target_config->cdef_bias_min_cdef[0];
+        if (target_config->texture_cdef_bias_min_cdef[1] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[1] = target_config->cdef_bias_min_cdef[1];
+        if (target_config->texture_cdef_bias_min_cdef[2] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[2] = target_config->cdef_bias_min_cdef[2];
+        if (target_config->texture_cdef_bias_min_cdef[3] == UINT8_DEFAULT)
+            target_config->texture_cdef_bias_min_cdef[3] = target_config->cdef_bias_min_cdef[3];
+    }
+
+    if (target_config->cdef_bias_max_cdef[0] >> 2 << 2 < target_config->cdef_bias_min_cdef[0] ||
+        target_config->cdef_bias_max_cdef[2] >> 2 << 2 < target_config->cdef_bias_min_cdef[2]) {
+        SVT_ERROR("there must be a primary CDEF strength divisible by 4 between cdef-bias-max-cdef and cdef-bias-min-cdef\n");
+        SVT_ERROR("cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (target_config->cdef_bias_max_cdef[1] < target_config->cdef_bias_min_cdef[1] ||
+        target_config->cdef_bias_max_cdef[3] < target_config->cdef_bias_min_cdef[3]) {
+        SVT_ERROR("the secondary CDEF strength of cdef-bias-max-cdef must be greater than or equal to cdef-bias-min-cdef\n");
+        SVT_ERROR("cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
+    if (target_config->texture_cdef_bias_max_cdef[0] >> 2 << 2 < target_config->texture_cdef_bias_min_cdef[0] ||
+        target_config->texture_cdef_bias_max_cdef[2] >> 2 << 2 < target_config->texture_cdef_bias_min_cdef[2]) {
+        SVT_ERROR("there must be a primary CDEF strength divisible by 4 between texture-cdef-bias-max-cdef and texture-cdef-bias-min-cdef\n");
+        SVT_ERROR("texture-cdef-bias-max-cdef and texture-cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (target_config->texture_cdef_bias_max_cdef[1] < target_config->texture_cdef_bias_min_cdef[1] ||
+        target_config->texture_cdef_bias_max_cdef[3] < target_config->texture_cdef_bias_min_cdef[3]) {
+        SVT_ERROR("the secondary CDEF strength of texture-cdef-bias-max-cdef must be greater than or equal to texture-cdef-bias-min-cdef\n");
+        SVT_ERROR("texture-cdef-bias-max-cdef and texture-cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
+    if (AOMMAX((target_config->cdef_bias_max_cdef[0] >> 2 << 2) + target_config->cdef_bias_max_sec_cdef_rel, 0) < (target_config->cdef_bias_min_cdef[1] == 3 ? 4 : target_config->cdef_bias_min_cdef[1])) {
+        SVT_ERROR("there is no secondary CDEF strength in Y within the limit of cdef-bias-max-sec-cdef-rel that is greater than or equal to cdef-bias-min-cdef, where there must be a primary CDEF strength divisible by 4 within the limit of cdef-bias-max-cdef that, after the offset of cdef-bias-max-sec-cdef-rel, results in a secondary CDEF strength that's greater than or equal to the minimum secondary CDEF strength specified in cdef-bias-min-cdef\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (AOMMAX((target_config->cdef_bias_max_cdef[2] >> 2 << 2) + target_config->cdef_bias_max_sec_cdef_rel, 0) < (target_config->cdef_bias_min_cdef[3] == 3 ? 4 : target_config->cdef_bias_min_cdef[3])) {
+        SVT_ERROR("there is no secondary CDEF strength in chroma within the limit of cdef-bias-max-sec-cdef-rel that is greater than or equal to cdef-bias-min-cdef, where there must be a primary CDEF strength divisible by 4 within the limit of cdef-bias-max-cdef that, after the offset of cdef-bias-max-sec-cdef-rel, results in a secondary CDEF strength that's greater than or equal to the minimum secondary CDEF strength specified in cdef-bias-min-cdef\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
+    if (AOMMAX((target_config->texture_cdef_bias_max_cdef[0] >> 2 << 2) + target_config->texture_cdef_bias_max_sec_cdef_rel, 0) < (target_config->texture_cdef_bias_min_cdef[1] == 3 ? 4 : target_config->texture_cdef_bias_min_cdef[1])) {
+        SVT_ERROR("there is no secondary CDEF strength in Y within the limit of texture-cdef-bias-max-sec-cdef-rel that is greater than or equal to texture-cdef-bias-min-cdef, where there must be a primary CDEF strength divisible by 4 within the limit of texture-cdef-bias-max-cdef that, after the offset of texture-cdef-bias-max-sec-cdef-rel, results in a secondary CDEF strength that's greater than or equal to the minimum secondary CDEF strength specified in texture-cdef-bias-min-cdef\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (AOMMAX((target_config->texture_cdef_bias_max_cdef[2] >> 2 << 2) + target_config->texture_cdef_bias_max_sec_cdef_rel, 0) < (target_config->texture_cdef_bias_min_cdef[3] == 3 ? 4 : target_config->texture_cdef_bias_min_cdef[3])) {
+        SVT_ERROR("there is no secondary CDEF strength in chroma within the limit of texture-cdef-bias-max-sec-cdef-rel that is greater than or equal to texture-cdef-bias-min-cdef, where there must be a primary CDEF strength divisible by 4 within the limit of texture-cdef-bias-max-cdef that, after the offset of texture-cdef-bias-max-sec-cdef-rel, results in a secondary CDEF strength that's greater than or equal to the minimum secondary CDEF strength specified in texture-cdef-bias-min-cdef\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
+    return return_error;
+}
+
 /******************************************
 * Verify Settings
 ******************************************/
@@ -945,17 +1104,17 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if ((config->ac_bias > 8.0 || config->ac_bias < 0.0) &&
+    if (!(config->ac_bias >= 0.0 && config->ac_bias <= 8.0) &&
         config->ac_bias != DEFAULT) {
         SVT_ERROR("Instance %u: AC bias strength must be between 0.0 and 8.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if ((config->texture_ac_bias > 64.0 || config->texture_ac_bias < 0.0) &&
+    if (!(config->texture_ac_bias >= 0.0 && config->texture_ac_bias <= 64.0) &&
         config->texture_ac_bias != DEFAULT) {
         SVT_ERROR("Instance %u: texture-ac-bias must be between 0.0 and 64.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if ((config->texture_energy_bias > 1.5 || config->texture_energy_bias < 1.0) &&
+    if (!(config->texture_energy_bias >= 1.0 && config->texture_energy_bias <= 1.5) &&
         config->texture_energy_bias != DEFAULT) {
         SVT_ERROR("Instance %u: texture-energy-bias must be between 1.0 and 1.5\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -971,12 +1130,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if ((config->lineart_psy_bias > 7.0 || config->lineart_psy_bias < 0.0) &&
+    if (!(config->lineart_psy_bias >= 0.0 && config->lineart_psy_bias <= 7.0) &&
         config->lineart_psy_bias != -2.0) {
         SVT_ERROR("Instance %u: lineart-psy-bias must be between 0 and 7\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (config->texture_psy_bias > 7.0 || config->texture_psy_bias < 0.0) {
+    if (!(config->texture_psy_bias >= 0.0 && config->texture_psy_bias <= 7.0)) {
         SVT_ERROR("Instance %u: texture-psy-bias must be between 0 and 7\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
@@ -1013,6 +1172,14 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
+    if (!(config->high_fidelity_encode_psy_bias >= 0.0 && config->high_fidelity_encode_psy_bias <= 1.0) &&
+        config->high_fidelity_encode_psy_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: high-fidelity-encode-psy-bias must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+
+    EbSvtAv1EncConfiguration dlf_cdef_bias_dummy;
+
     if ((config->dlf_sharpness < 0 || config->dlf_sharpness > 7) &&
         config->dlf_sharpness != UINT8_DEFAULT) {
         SVT_ERROR("Instance %u: dlf-sharpness must be between 0 and 7\n", channel_number + 1);
@@ -1022,36 +1189,9 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: dlf-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (config->dlf_bias) {
-        uint8_t assumed_max_dlf[2];
-        uint8_t assumed_min_dlf[2];
-        memcpy(assumed_max_dlf, config->dlf_bias_max_dlf, 2 * sizeof(uint8_t));
-        memcpy(assumed_min_dlf, config->dlf_bias_min_dlf, 2 * sizeof(uint8_t));
-        if (assumed_max_dlf[0] == UINT8_DEFAULT) {
-            if (config->texture_psy_bias >= 4.0)
-                assumed_max_dlf[0] = 6;
-            else
-                assumed_max_dlf[0] = 8;
-        }
-        if (assumed_max_dlf[1] == UINT8_DEFAULT) {
-            assumed_max_dlf[1] = 2;
-        }
-        if (assumed_min_dlf[0] == UINT8_DEFAULT) {
-            if ((config->texture_psy_bias >= 3.0 && config->texture_psy_bias < 5.0) ||
-                (config->texture_psy_bias >= 7.0))
-                assumed_min_dlf[0] = 0;
-            else
-                assumed_min_dlf[0] = 2;
-        }
-        if (assumed_min_dlf[1] == UINT8_DEFAULT)
-            assumed_min_dlf[1] = 0;
-
-        if (assumed_max_dlf[0] < assumed_min_dlf[0] ||
-            assumed_max_dlf[1] < assumed_min_dlf[1]) {
-            SVT_ERROR("Instance %u: dlf-bias-max-dlf must be greater than or equal to dlf-bias-min-dlf\n", channel_number + 1);
-            SVT_ERROR("Instance %u: dlf-bias-max-dlf and dlf-bias-min-dlf are specified in the format of strength_y,strength_uv\n", channel_number + 1);
+    if (config->enable_dlf_flag && config->dlf_bias) {
+        if (svt_av1_verify_dlf_bias_max_min_dlf(config, &dlf_cdef_bias_dummy) == EB_ErrorBadParameter)
             return_error = EB_ErrorBadParameter;
-        }
     }
 
     if (config->cdef_bias > 1) {
@@ -1059,27 +1199,8 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
     if (config->cdef_level != 0 && config->cdef_bias) {
-        if (config->cdef_bias_max_cdef[0] >> 2 << 2 < config->cdef_bias_min_cdef[0] ||
-            config->cdef_bias_max_cdef[2] >> 2 << 2 < config->cdef_bias_min_cdef[2]) {
-            SVT_ERROR("Instance %u: there must be a primary CDEF strength divisible by 4 between cdef-bias-max-cdef and cdef-bias-min-cdef\n", channel_number + 1);
-            SVT_ERROR("Instance %u: cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n", channel_number + 1);
+        if (svt_av1_verify_cdef_bias_max_min_cdef(config, &dlf_cdef_bias_dummy) == EB_ErrorBadParameter)
             return_error = EB_ErrorBadParameter;
-        }
-        if (config->cdef_bias_max_cdef[1] < config->cdef_bias_min_cdef[1] ||
-            config->cdef_bias_max_cdef[3] < config->cdef_bias_min_cdef[3]) {
-            SVT_ERROR("Instance %u: the secondary CDEF strength of cdef-bias-max-cdef must be greater than or equal to cdef-bias-min-cdef\n", channel_number + 1);
-            SVT_ERROR("Instance %u: cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n", channel_number + 1);
-            return_error = EB_ErrorBadParameter;
-        }
-
-        if (AOMMAX((config->cdef_bias_max_cdef[0] >> 2 << 2) + config->cdef_bias_max_sec_cdef_rel, 0) < (config->cdef_bias_min_cdef[1] == 3 ? 4 : config->cdef_bias_min_cdef[1])) {
-            SVT_ERROR("Instance %u: there is no secondary CDEF strength in Y within the limit of cdef-bias-max-sec-cdef-rel that is greater than or equal to cdef-bias-min-cdef, where there must be a primary CDEF strength divisible by 4 within the limit of cdef-bias-max-cdef that, after the offset of cdef-bias-max-sec-cdef-rel, results in a secondary CDEF strength that's greater than or equal to the minimum secondary CDEF strength specified in cdef-bias-min-cdef\n", channel_number + 1);
-            return_error = EB_ErrorBadParameter;
-        }
-        if (AOMMAX((config->cdef_bias_max_cdef[2] >> 2 << 2) + config->cdef_bias_max_sec_cdef_rel, 0) < (config->cdef_bias_min_cdef[3] == 3 ? 4 : config->cdef_bias_min_cdef[3])) {
-            SVT_ERROR("Instance %u: there is no secondary CDEF strength in chroma within the limit of cdef-bias-max-sec-cdef-rel that is greater than or equal to cdef-bias-min-cdef, where there must be a primary CDEF strength divisible by 4 within the limit of cdef-bias-max-cdef that, after the offset of cdef-bias-max-sec-cdef-rel, results in a secondary CDEF strength that's greater than or equal to the minimum secondary CDEF strength specified in cdef-bias-min-cdef\n", channel_number + 1);
-            return_error = EB_ErrorBadParameter;
-        }
 
         if (config->cdef_bias_damping_offset < -4 || config->cdef_bias_damping_offset > 8) {
             SVT_ERROR("Instance %u: cdef-bias-damping-offset must be between -4 and 8\n", channel_number + 1);
@@ -1092,9 +1213,14 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.75) &&
+    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.90) &&
         config->balancing_luminance_lambda_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.75\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.90\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+    if (!(config->balancing_texture_lambda_bias >= 0.0 && config->balancing_texture_lambda_bias <= 0.90) &&
+        config->balancing_texture_lambda_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: balancing-texture-lambda-bias must be between 0.0 and 0.90\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1313,6 +1439,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_coeff_lvl_offset         = INT8_DEFAULT;
     config_ptr->psy_bias_mds0_intra_inter_mode_bias = UINT8_DEFAULT;
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
+    config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
     config_ptr->dlf_bias_max_dlf[0]               = UINT8_DEFAULT;
@@ -1320,21 +1447,31 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->dlf_bias_min_dlf[0]               = UINT8_DEFAULT;
     config_ptr->dlf_bias_min_dlf[1]               = UINT8_DEFAULT;
     config_ptr->cdef_bias                         = 0;
-    config_ptr->cdef_bias_max_cdef[0]             = 4;
-    config_ptr->cdef_bias_max_cdef[1]             = 1;
-    config_ptr->cdef_bias_max_cdef[2]             = 2;
-    config_ptr->cdef_bias_max_cdef[3]             = 0;
-    config_ptr->cdef_bias_min_cdef[0]             = 0;
-    config_ptr->cdef_bias_min_cdef[1]             = 0;
-    config_ptr->cdef_bias_min_cdef[2]             = 0;
-    config_ptr->cdef_bias_min_cdef[3]             = 0;
+    config_ptr->cdef_bias_max_cdef[0]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_max_cdef[1]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_max_cdef[2]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_max_cdef[3]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_min_cdef[0]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_min_cdef[1]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_min_cdef[2]             = UINT8_DEFAULT;
+    config_ptr->cdef_bias_min_cdef[3]             = UINT8_DEFAULT;
     config_ptr->cdef_bias_max_sec_cdef_rel        = 0;
+    config_ptr->texture_cdef_bias_max_cdef[0]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_max_cdef[1]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_max_cdef[2]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_max_cdef[3]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_min_cdef[0]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_min_cdef[1]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_min_cdef[2]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_min_cdef[3]     = UINT8_DEFAULT;
+    config_ptr->texture_cdef_bias_max_sec_cdef_rel = 0;
     config_ptr->cdef_bias_damping_offset          = 0;
     config_ptr->balancing_q_bias                  = UINT8_DEFAULT;
     config_ptr->balancing_r0_based_layer          = INT8_DEFAULT;
     config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
     config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
     config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
+    config_ptr->balancing_texture_lambda_bias     = DEFAULT;
     config_ptr->balancing_tpl_intra_mode_beta_bias = UINT8_DEFAULT;
     config_ptr->noise_level_q_bias                = 1.0;
     config_ptr->sharp_tx                          = 1;
@@ -1545,6 +1682,10 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
             SVT_INFO("SVT [config]: film grain synth - chroma grain \t\t\t\t: disabled\n");
 
         // Global
+        if (config->high_fidelity_encode_psy_bias) {
+            SVT_INFO("SVT [config]: high fidelity encode PSY bias \t\t\t\t\t: on\n");
+        }
+
         if (config->lineart_psy_bias_easter_egg == 1) {
             SVT_INFO("SVT [config]: lineart bias ~ Kumiko version ~ / variance base / common thr \t: %.0f / %d / %d\n",
                      floor(config->lineart_psy_bias),
@@ -1665,23 +1806,53 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
             if (config->cdef_bias_min_cdef[0] == 0 &&
                 config->cdef_bias_min_cdef[1] == 0 &&
                 config->cdef_bias_min_cdef[2] == 0 &&
-                config->cdef_bias_min_cdef[3] == 0) {
-                if (!config->filtering_noise_detection)
-                    SVT_INFO("SVT [config]: CDEF bias - max CDEF strength \t\t\t\t\t: %d,%d %d,%d\n",
+                config->cdef_bias_min_cdef[3] == 0 &&
+                config->texture_cdef_bias_min_cdef[0] == 0 &&
+                config->texture_cdef_bias_min_cdef[1] == 0 &&
+                config->texture_cdef_bias_min_cdef[2] == 0 &&
+                config->texture_cdef_bias_min_cdef[3] == 0) {
+                if (config->texture_cdef_bias_max_cdef[0] == config->cdef_bias_max_cdef[0] &&
+                    config->texture_cdef_bias_max_cdef[1] == config->cdef_bias_max_cdef[1] &&
+                    config->texture_cdef_bias_max_cdef[2] == config->cdef_bias_max_cdef[2] &&
+                    config->texture_cdef_bias_max_cdef[3] == config->cdef_bias_max_cdef[3] &&
+                    config->texture_cdef_bias_min_cdef[0] == config->cdef_bias_min_cdef[0] &&
+                    config->texture_cdef_bias_min_cdef[1] == config->cdef_bias_min_cdef[1] &&
+                    config->texture_cdef_bias_min_cdef[2] == config->cdef_bias_min_cdef[2] &&
+                    config->texture_cdef_bias_min_cdef[3] == config->cdef_bias_min_cdef[3]) {
+                    if (!config->filtering_noise_detection)
+                        SVT_INFO("SVT [config]: CDEF bias - max CDEF strength \t\t\t\t\t: %d,%d %d,%d\n",
+                                 config->cdef_bias_max_cdef[0],
+                                 config->cdef_bias_max_cdef[1],
+                                 config->cdef_bias_max_cdef[2],
+                                 config->cdef_bias_max_cdef[3]);
+                    else
+                        SVT_INFO("SVT [config]: filtering noise detection / CDEF bias - max CDEF strength \t: %s / %d,%d %d,%d\n",
+                                 config->filtering_noise_detection == 1 ? "on" :
+                                 config->filtering_noise_detection == 2 ? "off" :
+                                 config->filtering_noise_detection == 3 ? "on (CDEF only)" :
+                                                                          "on (restoration only)",
+                                 config->cdef_bias_max_cdef[0],
+                                 config->cdef_bias_max_cdef[1],
+                                 config->cdef_bias_max_cdef[2],
+                                 config->cdef_bias_max_cdef[3]);
+                }
+                else {
+                    if (config->filtering_noise_detection)
+                        SVT_INFO("SVT [config]: filtering noise detection \t\t\t\t\t: %s\n",
+                                 config->filtering_noise_detection == 1 ? "on" :
+                                 config->filtering_noise_detection == 2 ? "off" :
+                                 config->filtering_noise_detection == 3 ? "on (CDEF only)" :
+                                                                          "on (restoration only)");
+                    SVT_INFO("SVT [config]: CDEF bias - CDEF / texture CDEF max strength \t\t\t: %d,%d %d,%d / %d,%d %d,%d\n",
                              config->cdef_bias_max_cdef[0],
                              config->cdef_bias_max_cdef[1],
                              config->cdef_bias_max_cdef[2],
-                             config->cdef_bias_max_cdef[3]);
-                else
-                    SVT_INFO("SVT [config]: filtering noise detection / CDEF bias - max CDEF strength \t: %s / %d,%d %d,%d\n",
-                             config->filtering_noise_detection == 1 ? "on" :
-                             config->filtering_noise_detection == 2 ? "off" :
-                             config->filtering_noise_detection == 3 ? "on (CDEF only)" :
-                                                                      "on (restoration only)",
-                             config->cdef_bias_max_cdef[0],
-                             config->cdef_bias_max_cdef[1],
-                             config->cdef_bias_max_cdef[2],
-                             config->cdef_bias_max_cdef[3]);
+                             config->cdef_bias_max_cdef[3],
+                             config->texture_cdef_bias_max_cdef[0],
+                             config->texture_cdef_bias_max_cdef[1],
+                             config->texture_cdef_bias_max_cdef[2],
+                             config->texture_cdef_bias_max_cdef[3]);
+                }
             }
             else {
                 if (config->filtering_noise_detection)
@@ -1699,6 +1870,24 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                          config->cdef_bias_min_cdef[1],
                          config->cdef_bias_min_cdef[2],
                          config->cdef_bias_min_cdef[3]);
+                if (config->texture_cdef_bias_max_cdef[0] != config->cdef_bias_max_cdef[0] ||
+                    config->texture_cdef_bias_max_cdef[1] != config->cdef_bias_max_cdef[1] ||
+                    config->texture_cdef_bias_max_cdef[2] != config->cdef_bias_max_cdef[2] ||
+                    config->texture_cdef_bias_max_cdef[3] != config->cdef_bias_max_cdef[3] ||
+                    config->texture_cdef_bias_min_cdef[0] != config->cdef_bias_min_cdef[0] ||
+                    config->texture_cdef_bias_min_cdef[1] != config->cdef_bias_min_cdef[1] ||
+                    config->texture_cdef_bias_min_cdef[2] != config->cdef_bias_min_cdef[2] ||
+                    config->texture_cdef_bias_min_cdef[3] != config->cdef_bias_min_cdef[3]) {
+                    SVT_INFO("SVT [config]: CDEF bias - texture max / min CDEF strength \t\t\t: %d,%d %d,%d / %d,%d %d,%d\n",
+                             config->texture_cdef_bias_max_cdef[0],
+                             config->texture_cdef_bias_max_cdef[1],
+                             config->texture_cdef_bias_max_cdef[2],
+                             config->texture_cdef_bias_max_cdef[3],
+                             config->texture_cdef_bias_min_cdef[0],
+                             config->texture_cdef_bias_min_cdef[1],
+                             config->texture_cdef_bias_min_cdef[2],
+                             config->texture_cdef_bias_min_cdef[3]);
+                }
             }
         }
         else {
@@ -2478,27 +2667,27 @@ static EbErrorType str_to_resz_denoms(const char *nptr, SvtAv1FrameScaleEvts *ev
     return parse_list_u32(nptr, evts->resize_denoms, param_count);
 }
 
-static EbErrorType str_to_cdef_bias_max_min_cdef(const char *nptr, uint8_t *target) {
+static EbErrorType str_to_cdef_bias_max_min_cdef(const char *nptr, const char *name, uint8_t *target) {
     uint32_t    cdef_bias_max_min_cdef[4];
     EbErrorType return_error;
 
     return_error = parse_list_u32(nptr, cdef_bias_max_min_cdef, 4);
 
     if (return_error == EB_ErrorBadParameter) {
-        SVT_ERROR("cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        SVT_ERROR("%s are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n", name);
         return return_error;
     }
 
     if (cdef_bias_max_min_cdef[0] < 0 || cdef_bias_max_min_cdef[0] > 15 ||
         cdef_bias_max_min_cdef[2] < 0 || cdef_bias_max_min_cdef[2] > 15) {
-        SVT_ERROR("primary CDEF strength for cdef-bias-max-cdef and cdef-bias-min-cdef must be between 0 and 15\n");
-        SVT_ERROR("cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        SVT_ERROR("primary CDEF strength for %s must be between 0 and 15\n", name);
+        SVT_ERROR("%s are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n", name);
         return EB_ErrorBadParameter;
     }
     if (cdef_bias_max_min_cdef[1] < 0 || cdef_bias_max_min_cdef[1] == 3 || cdef_bias_max_min_cdef[1] > 4 ||
         cdef_bias_max_min_cdef[3] < 0 || cdef_bias_max_min_cdef[3] == 3 || cdef_bias_max_min_cdef[3] > 4) {
-        SVT_ERROR("secondary CDEF strength for cdef-bias-max-cdef and cdef-bias-min-cdef must be either 0, 1, 2, or 4\n");
-        SVT_ERROR("cdef-bias-max-cdef and cdef-bias-min-cdef are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n");
+        SVT_ERROR("secondary CDEF strength for %s must be either 0, 1, 2, or 4\n", name);
+        SVT_ERROR("%s are specified in the format of pri_strength_y,sec_strength_y,pri_strength_uv,sec_strength_uv\n", name);
         return EB_ErrorBadParameter;
     }
 
@@ -2708,9 +2897,13 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         return str_to_resz_denoms(value, &config_struct->frame_scale_evts);
 
     if (!strcmp(name, "cdef-bias-max-cdef"))
-        return str_to_cdef_bias_max_min_cdef(value, config_struct->cdef_bias_max_cdef);
+        return str_to_cdef_bias_max_min_cdef(value, name, config_struct->cdef_bias_max_cdef);
     if (!strcmp(name, "cdef-bias-min-cdef"))
-        return str_to_cdef_bias_max_min_cdef(value, config_struct->cdef_bias_min_cdef);
+        return str_to_cdef_bias_max_min_cdef(value, name, config_struct->cdef_bias_min_cdef);
+    if (!strcmp(name, "texture-cdef-bias-max-cdef"))
+        return str_to_cdef_bias_max_min_cdef(value, name, config_struct->texture_cdef_bias_max_cdef);
+    if (!strcmp(name, "texture-cdef-bias-min-cdef"))
+        return str_to_cdef_bias_max_min_cdef(value, name, config_struct->texture_cdef_bias_min_cdef);
 
     if (!strcmp(name, "dlf-bias-max-dlf"))
         return str_to_dlf_bias_max_min_dlf(value, config_struct->dlf_bias_max_dlf);
@@ -2864,9 +3057,11 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     } double_opts[] = {
         {"qp-scale-compress-strength", &config_struct->qp_scale_compress_strength},
         {"balancing-luminance-lambda-bias", &config_struct->balancing_luminance_lambda_bias},
+        {"balancing-texture-lambda-bias", &config_struct->balancing_texture_lambda_bias},
         {"ac-bias", &config_struct->ac_bias},
         {"texture-ac-bias", &config_struct->texture_ac_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},
+        {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias},
         {"noise-level-q-bias", &config_struct->noise_level_q_bias}
     };
     const size_t double_opts_size = sizeof(double_opts) / sizeof(double_opts[0]);
@@ -2920,6 +3115,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"balancing-r0-dampening-layer", &config_struct->balancing_r0_dampening_layer},
         {"psy-bias-coeff-lvl-offset", &config_struct->psy_bias_coeff_lvl_offset},
         {"cdef-bias-max-sec-cdef-rel", &config_struct->cdef_bias_max_sec_cdef_rel},
+        {"texture-cdef-bias-max-sec-cdef-rel", &config_struct->texture_cdef_bias_max_sec_cdef_rel},
         {"cdef-bias-damping-offset", &config_struct->cdef_bias_damping_offset},
     };
     const size_t int8_opts_size = sizeof(int8_opts) / sizeof(int8_opts[0]);

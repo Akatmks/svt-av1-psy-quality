@@ -1147,6 +1147,13 @@ typedef struct EbSvtAv1EncConfiguration {
     uint8_t psy_bias_inter_mode_bias;
 
     /**
+     * @brief Bias various features for high fidelity encoding.
+     * Min value is 0
+     * Max value is 1
+     */
+    double high_fidelity_encode_psy_bias;
+
+    /**
      * @brief Enable DLF bias
      * 0: disabled
      * 1: enabled
@@ -1190,6 +1197,9 @@ typedef struct EbSvtAv1EncConfiguration {
      * Max value is 4.
      */
     int8_t cdef_bias_max_sec_cdef_rel;
+    uint8_t texture_cdef_bias_max_cdef[4];
+    uint8_t texture_cdef_bias_min_cdef[4];
+    int8_t texture_cdef_bias_max_sec_cdef_rel;
     /**
      * @brief Use bigger or smaller CDEF damping
      * Min value is -4.
@@ -1213,10 +1223,17 @@ typedef struct EbSvtAv1EncConfiguration {
     /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0
-     * Max value is 0.75
+     * Max value is 0.9
      * 0.0: disabled
      */
     double balancing_luminance_lambda_bias;
+    /**
+     * @brief Enable balancing texture lambda bias
+     * Min value is 0.0
+     * Max value is 0.9
+     * 0.0: disabled
+     */
+    double balancing_texture_lambda_bias;
 
     /**
      * @brief Frames with temporal layer lower than or equal to hierarchical levels + `--balancing-r0-based-layer` will use r0-based QPS QPM.
@@ -1313,7 +1330,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    // - 2 * sizeof(Bool) - 23 * sizeof(uint8_t) - 8 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 6 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 31 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 8 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

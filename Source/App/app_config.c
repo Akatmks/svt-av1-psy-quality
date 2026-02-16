@@ -238,6 +238,7 @@
 #define PSY_BIAS_COEFF_LVL_OFFSET_TOKEN "--psy-bias-coeff-lvl-offset"
 #define PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN "--psy-bias-mds0-intra-inter-mode-bias"
 #define PSY_BIAS_INTER_MODE_BIAS_TOKEN "--psy-bias-inter-mode-bias"
+#define HIGH_FIDELITY_ENCODE_PSY_BIAS "--high-fidelity-encode-psy-bias"
 #define DLF_BIAS_TOKEN "--dlf-bias"
 #define DLF_SHARPNESS_TOKEN "--dlf-sharpness"
 #define DLF_BIAS_MAX_DLF_TOKEN "--dlf-bias-max-dlf"
@@ -246,10 +247,14 @@
 #define CDEF_BIAS_MAX_CDEF_TOKEN "--cdef-bias-max-cdef"
 #define CDEF_BIAS_MIN_CDEF_TOKEN "--cdef-bias-min-cdef"
 #define CDEF_BIAS_MAX_SEC_CDEF_REL_TOKEN "--cdef-bias-max-sec-cdef-rel"
+#define TEXTURE_CDEF_BIAS_MAX_CDEF_TOKEN "--texture-cdef-bias-max-cdef"
+#define TEXTURE_CDEF_BIAS_MIN_CDEF_TOKEN "--texture-cdef-bias-min-cdef"
+#define TEXTURE_CDEF_BIAS_MAX_SEC_CDEF_REL_TOKEN "--texture-cdef-bias-max-sec-cdef-rel"
 #define CDEF_BIAS_DAMPING_OFFSET_TOKEN "--cdef-bias-damping-offset"
 #define BALANCING_Q_BIAS_TOKEN "--balancing-q-bias"
 #define BALANCING_LUMINANCE_Q_BIAS_TOKEN "--balancing-luminance-q-bias"
 #define BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN "--balancing-luminance-lambda-bias"
+#define BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN "--balancing-texture-lambda-bias"
 #define BALANCING_R0_BASED_LAYER_TOKEN "--balancing-r0-based-layer"
 #define BALANCING_R0_DAMPENING_LAYER_TOKEN "--balancing-r0-dampening-layer"
 #define BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN "--balancing-tpl-intra-mode-beta-bias"
@@ -1438,6 +1443,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Bias against intra mode in non base layers. [0-5]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     HIGH_FIDELITY_ENCODE_PSY_BIAS,
+     "[PSY] Bias various features for high fidelity encoding. [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      DLF_BIAS_TOKEN,
      "[PSY] Enable DLF bias, default is 0 [0-1]",
      set_cfg_generic_token},
@@ -1470,6 +1479,18 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Max CDEF secondary strength relative to the primary strength, default is 0 [-12-4]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     TEXTURE_CDEF_BIAS_MAX_CDEF_TOKEN,
+     "[PSY] Max CDEF strength in low variance region",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     TEXTURE_CDEF_BIAS_MIN_CDEF_TOKEN,
+     "[PSY] Min CDEF strength in low variance region",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     TEXTURE_CDEF_BIAS_MAX_SEC_CDEF_REL_TOKEN,
+     "[PSY] Max CDEF secondary strength relative to the primary strength in low variance region [-12-4]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      CDEF_BIAS_DAMPING_OFFSET_TOKEN,
      "[PSY] Offset CDEF damping, default is 1 [-12-4]",
      set_cfg_generic_token},
@@ -1491,7 +1512,11 @@ ConfigEntry config_entry_psy[] = {
      set_cfg_generic_token},
     {SINGLE_INPUT,
      BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN,
-     "[PSY] Balancing luminance lambda bias [0.0-0.75]",
+     "[PSY] Balancing luminance lambda bias [0.0-0.9]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN,
+     "[PSY] Balancing texture lambda bias [0.0-0.9]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN,
@@ -1769,6 +1794,8 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN, "PsyBiasmds0IntraInterModeBias", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_INTER_MODE_BIAS_TOKEN, "PsyBiasInterModeBias", set_cfg_generic_token},
 
+    {SINGLE_INPUT, HIGH_FIDELITY_ENCODE_PSY_BIAS, "HighFidelityEncodePsyBias", set_cfg_generic_token},
+
     // DLF Bias
     {SINGLE_INPUT, DLF_BIAS_TOKEN, "DLFBias", set_cfg_generic_token},
     {SINGLE_INPUT, DLF_SHARPNESS_TOKEN, "DLFSharpness", set_cfg_generic_token},
@@ -1780,6 +1807,9 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, CDEF_BIAS_MAX_CDEF_TOKEN, "CDEFBiasMaxCDEF", set_cfg_generic_token},
     {SINGLE_INPUT, CDEF_BIAS_MIN_CDEF_TOKEN, "CDEFBiasMinCDEF", set_cfg_generic_token},
     {SINGLE_INPUT, CDEF_BIAS_MAX_SEC_CDEF_REL_TOKEN, "CDEFBiasMaxSecCDEFRel", set_cfg_generic_token},
+    {SINGLE_INPUT, TEXTURE_CDEF_BIAS_MAX_CDEF_TOKEN, "TextureCDEFBiasMaxCDEF", set_cfg_generic_token},
+    {SINGLE_INPUT, TEXTURE_CDEF_BIAS_MIN_CDEF_TOKEN, "TextureCDEFBiasMinCDEF", set_cfg_generic_token},
+    {SINGLE_INPUT, TEXTURE_CDEF_BIAS_MAX_SEC_CDEF_REL_TOKEN, "TextureCDEFBiasMaxSecCDEFRel", set_cfg_generic_token},
     {SINGLE_INPUT, CDEF_BIAS_DAMPING_OFFSET_TOKEN, "CDEFBiasDampingOffset", set_cfg_generic_token},
 
     // Balancing Q Bias
@@ -1788,6 +1818,8 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, BALANCING_LUMINANCE_Q_BIAS_TOKEN, "BalancingLuminanceQBias", set_cfg_generic_token},
     // Balancing Luminance Lambda Bias
     {SINGLE_INPUT, BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN, "BalancingLuminanceLambdaBias", set_cfg_generic_token},
+    // Balancing Texture Lambda Bias
+    {SINGLE_INPUT, BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN, "BalancingTextureLambdaBias", set_cfg_generic_token},
 
     // Balancing r0-based Layer
     {SINGLE_INPUT, BALANCING_R0_BASED_LAYER_TOKEN, "BalancingR0BasedLayer", set_cfg_generic_token},

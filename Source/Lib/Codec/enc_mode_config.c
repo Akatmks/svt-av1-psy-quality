@@ -4044,8 +4044,13 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
     else
                   is_base_layer1 = (pcs->ppcs->temporal_layer_index + pcs->scs->static_config.hierarchical_levels - pcs->ppcs->hierarchical_levels) <= 1 ||
                                    pcs->ppcs->slice_type == I_SLICE;
-    const uint8_t psy_bias_cand_elimination = pcs->scs->static_config.texture_psy_bias >= 3.0 &&
-                                              !is_base_layer1;
+    uint8_t       psy_bias_cand_elimination = 0;
+    if (pcs->scs->static_config.texture_psy_bias >= 3.0) {
+        if (pcs->scs->static_config.high_fidelity_encode_psy_bias)
+                  psy_bias_cand_elimination = 1;
+        else
+                  psy_bias_cand_elimination = !is_base_layer1;
+    }
 
     switch (cand_reduction_level) {
     case 0:

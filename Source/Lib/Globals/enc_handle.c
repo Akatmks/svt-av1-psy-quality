@@ -4033,21 +4033,32 @@ static void set_param_based_on_input(SequenceControlSet *scs)
                 scs->static_config.balancing_luminance_q_bias = 100;
             else
                 scs->static_config.balancing_luminance_q_bias = 80;
+
+            if (scs->static_config.high_fidelity_encode_psy_bias)
+                scs->static_config.balancing_luminance_q_bias += 40;
         }
         else
             scs->static_config.balancing_luminance_q_bias     = 0;
     }
     if (scs->static_config.balancing_luminance_lambda_bias == DEFAULT) {
         if (scs->static_config.balancing_q_bias) {
-            if ((scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 60) // --crf 15.00
-                scs->static_config.balancing_luminance_lambda_bias = 0.50;
-            else if ((scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 80) // --crf 20.00
-                scs->static_config.balancing_luminance_lambda_bias = 0.25;
+            if (scs->static_config.high_fidelity_encode_psy_bias)
+                scs->static_config.balancing_luminance_lambda_bias = 0.5;
             else
                 scs->static_config.balancing_luminance_lambda_bias = 0.0;
         }
         else
             scs->static_config.balancing_luminance_lambda_bias = 0.0;
+    }
+    if (scs->static_config.balancing_texture_lambda_bias == DEFAULT) {
+        if (scs->static_config.balancing_q_bias) {
+            if (scs->static_config.high_fidelity_encode_psy_bias)
+                scs->static_config.balancing_texture_lambda_bias = 0.4;
+            else
+                scs->static_config.balancing_texture_lambda_bias = 0.0;
+        }
+        else
+            scs->static_config.balancing_texture_lambda_bias = 0.0;
     }
 
     if (scs->static_config.balancing_tpl_intra_mode_beta_bias == UINT8_DEFAULT) {
@@ -4078,7 +4089,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.psy_bias_disable_warped_motion = 0;
     }
     if (scs->static_config.psy_bias_disable_me_8x8 == UINT8_DEFAULT) {
-        if (scs->static_config.lineart_psy_bias >= 3.0)
+        if (scs->static_config.high_fidelity_encode_psy_bias)
+            scs->static_config.psy_bias_disable_me_8x8 = 0;
+        else if (scs->static_config.lineart_psy_bias >= 3.0)
             scs->static_config.psy_bias_disable_me_8x8 = 1;
         else
             scs->static_config.psy_bias_disable_me_8x8 = 0;
@@ -4172,24 +4185,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else
             scs->static_config.dlf_sharpness = CLIP3(0, 7, scs->static_config.sharpness);
     }
-    if (scs->static_config.dlf_bias_max_dlf[0] == UINT8_DEFAULT) {
-        if (scs->static_config.texture_psy_bias >= 4.0)
-            scs->static_config.dlf_bias_max_dlf[0] = 6;
-        else
-            scs->static_config.dlf_bias_max_dlf[0] = 8;
-    }
-    if (scs->static_config.dlf_bias_max_dlf[1] == UINT8_DEFAULT) {
-        scs->static_config.dlf_bias_max_dlf[1] = 2;
-    }
-    if (scs->static_config.dlf_bias_min_dlf[0] == UINT8_DEFAULT) {
-        if ((scs->static_config.texture_psy_bias >= 3.0 && scs->static_config.texture_psy_bias < 5.0) ||
-            scs->static_config.texture_psy_bias >= 7.0)
-            scs->static_config.dlf_bias_min_dlf[0] = 0;
-        else
-            scs->static_config.dlf_bias_min_dlf[0] = 2;
-    }
-    if (scs->static_config.dlf_bias_min_dlf[1] == UINT8_DEFAULT)
-        scs->static_config.dlf_bias_min_dlf[1] = 0;
+    svt_av1_verify_dlf_bias_max_min_dlf(&scs->static_config, &scs->static_config);
 
     if (scs->static_config.cdef_level != 0 && scs->static_config.cdef_bias) {
         if (!(scs->static_config.cdef_level == DEFAULT || scs->static_config.cdef_level == 1) ||
@@ -4199,12 +4195,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
         scs->static_config.cdef_level = 1;
     }
-    if (scs->static_config.texture_psy_bias >= 4.0) {
-        scs->static_config.cdef_bias_max_cdef[1] = 0;
-        scs->static_config.cdef_bias_max_cdef[3] = 0;
-        scs->static_config.cdef_bias_min_cdef[1] = 0;
-        scs->static_config.cdef_bias_min_cdef[3] = 0;
-    }
+    svt_av1_verify_cdef_bias_max_min_cdef(&scs->static_config, &scs->static_config);
 
     // no future minigop is used for lowdelay prediction structure
     if (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_P || scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
@@ -4523,7 +4514,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.lineart_psy_bias >= 1.0           ||
         scs->static_config.texture_psy_bias >= 1.0           ||
         scs->static_config.balancing_luminance_q_bias        ||
-        scs->static_config.balancing_luminance_lambda_bias)
+        scs->static_config.balancing_luminance_lambda_bias   ||
+        scs->static_config.balancing_texture_lambda_bias)
         scs->calculate_variance = 1;
     else if (scs->static_config.enc_mode <= ENC_M6)
         scs->calculate_variance = 1;
@@ -4721,6 +4713,53 @@ static void copy_api_from_app(
             SVT_WARN("Low delay mode only support encodermode [7-%d]. Forcing encoder mode to 7\n", ENC_M13);
         }
     }
+
+    // Extended CRF
+    scs->static_config.qp = ((EbSvtAv1EncConfiguration*)config_struct)->qp;
+    scs->static_config.extended_crf_qindex_offset = config_struct->extended_crf_qindex_offset;
+
+    // Balancing Q bias
+    scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
+    // Balancing luminance Q bias
+    scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
+    // Balancing luminance lambda bias
+    scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
+    // Balancing texture lambda bias
+    scs->static_config.balancing_texture_lambda_bias = config_struct->balancing_texture_lambda_bias;
+
+    // Balancing r0-based layer
+    scs->static_config.balancing_r0_based_layer = config_struct->balancing_r0_based_layer;
+    // Balancing r0 dampening layer
+    scs->static_config.balancing_r0_dampening_layer = config_struct->balancing_r0_dampening_layer;
+
+    // Balancing TPL intra mode beta bias
+    scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
+
+    // `-psy-bias`
+    scs->static_config.lineart_psy_bias = config_struct->lineart_psy_bias;
+    scs->static_config.texture_psy_bias = config_struct->texture_psy_bias;
+    scs->static_config.lineart_psy_bias_easter_egg = config_struct->lineart_psy_bias_easter_egg;
+    scs->static_config.texture_psy_bias_easter_egg = config_struct->texture_psy_bias_easter_egg;
+    scs->static_config.lineart_variance_thr = config_struct->lineart_variance_thr;
+    scs->static_config.texture_variance_thr = config_struct->texture_variance_thr;
+
+    scs->static_config.psy_bias_mds0_sad = config_struct->psy_bias_mds0_sad;
+    scs->static_config.psy_bias_disable_warped_motion = config_struct->psy_bias_disable_warped_motion;
+    scs->static_config.psy_bias_disable_me_8x8 = config_struct->psy_bias_disable_me_8x8;
+    scs->static_config.psy_bias_disable_sgrproj = config_struct->psy_bias_disable_sgrproj;
+    scs->static_config.psy_bias_coeff_lvl_offset = config_struct->psy_bias_coeff_lvl_offset;
+    scs->static_config.psy_bias_mds0_intra_inter_mode_bias = config_struct->psy_bias_mds0_intra_inter_mode_bias;
+    scs->static_config.psy_bias_inter_mode_bias = config_struct->psy_bias_inter_mode_bias;
+
+    scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;
+    if (scs->static_config.high_fidelity_encode_psy_bias == DEFAULT) {
+        if ((scs->static_config.lineart_psy_bias >= 1.0 || scs->static_config.texture_psy_bias >= 1.0) &&
+            (scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 64) // --crf 16.00
+            scs->static_config.high_fidelity_encode_psy_bias = 1.0;
+        else
+            scs->static_config.high_fidelity_encode_psy_bias = 0.0;
+    }
+
     scs->static_config.tune = config_struct->tune;
     scs->static_config.hierarchical_levels = ((EbSvtAv1EncConfiguration*)config_struct)->hierarchical_levels;
 
@@ -4734,6 +4773,9 @@ static void copy_api_from_app(
             !(scs->static_config.enc_mode <= ENC_M9) || input_resolution >= INPUT_SIZE_8K_RANGE
                 ? 4
                 : 5;
+
+        if (scs->static_config.high_fidelity_encode_psy_bias)
+            scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 3);
     }
     if (scs->static_config.pass == ENC_SINGLE_PASS && scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
         if (scs->static_config.hierarchical_levels != 2) {
@@ -4821,7 +4863,6 @@ static void copy_api_from_app(
     }
     scs->static_config.pin_threads = ((EbSvtAv1EncConfiguration*)config_struct)->pin_threads;
     scs->static_config.target_socket = ((EbSvtAv1EncConfiguration*)config_struct)->target_socket;
-    scs->static_config.qp = ((EbSvtAv1EncConfiguration*)config_struct)->qp;
     scs->static_config.recon_enabled = ((EbSvtAv1EncConfiguration*)config_struct)->recon_enabled;
     scs->static_config.enable_tpl_la = ((EbSvtAv1EncConfiguration*)config_struct)->enable_tpl_la;
     if (scs->static_config.enable_tpl_la != 1){
@@ -4932,9 +4973,6 @@ static void copy_api_from_app(
     // Sharpness
     scs->static_config.sharpness = config_struct->sharpness;
 
-    // Extended CRF
-    scs->static_config.extended_crf_qindex_offset = config_struct->extended_crf_qindex_offset;
-
     // QP scaling compression
     scs->static_config.qp_scale_compress_strength = config_struct->qp_scale_compress_strength;
 
@@ -4973,22 +5011,6 @@ static void copy_api_from_app(
     // Noise level thr
     scs->static_config.noise_level_thr = config_struct->noise_level_thr;
 
-    // `-psy-bias`
-    scs->static_config.lineart_psy_bias = config_struct->lineart_psy_bias;
-    scs->static_config.texture_psy_bias = config_struct->texture_psy_bias;
-    scs->static_config.lineart_psy_bias_easter_egg = config_struct->lineart_psy_bias_easter_egg;
-    scs->static_config.texture_psy_bias_easter_egg = config_struct->texture_psy_bias_easter_egg;
-    scs->static_config.lineart_variance_thr = config_struct->lineart_variance_thr;
-    scs->static_config.texture_variance_thr = config_struct->texture_variance_thr;
-
-    scs->static_config.psy_bias_mds0_sad = config_struct->psy_bias_mds0_sad;
-    scs->static_config.psy_bias_disable_warped_motion = config_struct->psy_bias_disable_warped_motion;
-    scs->static_config.psy_bias_disable_me_8x8 = config_struct->psy_bias_disable_me_8x8;
-    scs->static_config.psy_bias_disable_sgrproj = config_struct->psy_bias_disable_sgrproj;
-    scs->static_config.psy_bias_coeff_lvl_offset = config_struct->psy_bias_coeff_lvl_offset;
-    scs->static_config.psy_bias_mds0_intra_inter_mode_bias = config_struct->psy_bias_mds0_intra_inter_mode_bias;
-    scs->static_config.psy_bias_inter_mode_bias = config_struct->psy_bias_inter_mode_bias;
-
     // DLF bias
     scs->static_config.dlf_bias = config_struct->dlf_bias;
     scs->static_config.dlf_sharpness = config_struct->dlf_sharpness;
@@ -5000,22 +5022,10 @@ static void copy_api_from_app(
     memcpy(scs->static_config.cdef_bias_max_cdef, config_struct->cdef_bias_max_cdef, 4 * sizeof(uint8_t));
     memcpy(scs->static_config.cdef_bias_min_cdef, config_struct->cdef_bias_min_cdef, 4 * sizeof(uint8_t));
     scs->static_config.cdef_bias_max_sec_cdef_rel = config_struct->cdef_bias_max_sec_cdef_rel;
+    memcpy(scs->static_config.texture_cdef_bias_max_cdef, config_struct->texture_cdef_bias_max_cdef, 4 * sizeof(uint8_t));
+    memcpy(scs->static_config.texture_cdef_bias_min_cdef, config_struct->texture_cdef_bias_min_cdef, 4 * sizeof(uint8_t));
+    scs->static_config.texture_cdef_bias_max_sec_cdef_rel = config_struct->texture_cdef_bias_max_sec_cdef_rel;
     scs->static_config.cdef_bias_damping_offset = config_struct->cdef_bias_damping_offset;
-
-    // Balancing Q bias
-    scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
-    // Balancing luminance Q bias
-    scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
-    // Balancing luminance lambda bias
-    scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
-
-    // Balancing r0-based layer
-    scs->static_config.balancing_r0_based_layer = config_struct->balancing_r0_based_layer;
-    // Balancing r0 dampening layer
-    scs->static_config.balancing_r0_dampening_layer = config_struct->balancing_r0_dampening_layer;
-
-    // Balancing TPL intra mode beta bias
-    scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
 
     // Noise level Q bias
     scs->static_config.noise_level_q_bias = config_struct->noise_level_q_bias;
