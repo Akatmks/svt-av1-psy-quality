@@ -1078,6 +1078,12 @@ typedef struct EbSvtAv1EncConfiguration {
      * 1.00: Disabled
      * Default is 1.00
      */
+    double lineart_energy_bias;
+    /**
+     * @brief
+     * 1.00: Disabled
+     * Default is 1.00
+     */
     double texture_energy_bias;
 
     /**
@@ -1330,7 +1336,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    // - 2 * sizeof(Bool) - 31 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 8 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 31 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 9 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

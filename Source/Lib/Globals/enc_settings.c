@@ -1114,9 +1114,14 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: texture-ac-bias must be between 0.0 and 64.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->texture_energy_bias >= 1.0 && config->texture_energy_bias <= 1.5) &&
+    if (!(config->lineart_energy_bias >= ((double)2/3) && config->lineart_energy_bias <= 1.5) &&
+        config->lineart_energy_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: texture-energy-bias must be between 0.667 and 1.5\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+    if (!(config->texture_energy_bias >= ((double)2/3) && config->texture_energy_bias <= 1.5) &&
         config->texture_energy_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: texture-energy-bias must be between 1.0 and 1.5\n", channel_number + 1);
+        SVT_ERROR("Instance %u: texture-energy-bias must be between 0.667 and 1.5\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1422,6 +1427,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->noise_norm_strength               = UINT8_DEFAULT;
     config_ptr->ac_bias                           = DEFAULT;
     config_ptr->texture_ac_bias                   = DEFAULT;
+    config_ptr->lineart_energy_bias               = DEFAULT;
     config_ptr->texture_energy_bias               = DEFAULT;
     config_ptr->tx_bias                           = 0;
     config_ptr->low_q_taper                       = 0;
@@ -1765,31 +1771,31 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                  config->sharpness,
                  config->noise_norm_strength);
 
-        if (config->tx_bias) {
-            if (config->texture_ac_bias != config->ac_bias || config->texture_energy_bias != 1.0)
-                SVT_INFO("SVT [config]: AC bias / texture AC bias / texture energy bias / TX bias \t: %.2f / %.2f / %.2f / %s\n",
+        if (config->ac_bias) {
+            if (config->texture_ac_bias != config->ac_bias || config->lineart_energy_bias != 1.0 || config->texture_energy_bias != 1.0) {
+                SVT_INFO("SVT [config]: AC bias - universal / texture bias strength \t\t\t: %.2f / %.2f\n",
                          config->ac_bias,
-                         config->texture_ac_bias,
-                         config->texture_energy_bias,
-                         config->tx_bias == 1
-                             ? "full"
-                             : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
-            else
-                SVT_INFO("SVT [config]: AC bias strength / TX bias \t\t\t\t\t: %.2f / %s\n",
-                         config->ac_bias,
-                         config->tx_bias == 1
-                             ? "full"
-                             : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
-        }
-        else if (config->ac_bias) {
-            if (config->texture_ac_bias != config->ac_bias || config->texture_energy_bias != 1.0)
-                SVT_INFO("SVT [config]: AC bias / texture AC bias / texture energy bias strength \t: %.2f / %.2f / %.2f\n",
-                         config->ac_bias,
-                         config->texture_ac_bias,
+                         config->texture_ac_bias);
+                SVT_INFO("SVT [config]: AC bias - lineart / texture energy bias strength \t\t: %.2f / %.2f\n",
+                         config->lineart_energy_bias,
                          config->texture_energy_bias);
-            else
-                SVT_INFO("SVT [config]: AC bias strength \t\t\t\t\t\t: %.2f\n",
-                         config->ac_bias);
+                if (config->tx_bias)
+                    SVT_INFO("SVT [config]: TX bias \t\t\t\t\t\t\t: %s\n",
+                             config->tx_bias == 1
+                                 ? "full"
+                                 : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
+            }
+            else {
+                if (config->tx_bias)
+                    SVT_INFO("SVT [config]: AC bias strength / TX bias \t\t\t\t\t: %.2f / %s\n",
+                             config->ac_bias,
+                             config->tx_bias == 1
+                                 ? "full"
+                                 : (config->tx_bias == 2 ? "size only" : (config->tx_bias == 3 ? "interp. only" : "off")));
+                else
+                    SVT_INFO("SVT [config]: AC bias strength \t\t\t\t\t\t: %.2f\n",
+                             config->ac_bias);
+            }
         }
 
         // DLF
@@ -3060,6 +3066,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"balancing-texture-lambda-bias", &config_struct->balancing_texture_lambda_bias},
         {"ac-bias", &config_struct->ac_bias},
         {"texture-ac-bias", &config_struct->texture_ac_bias},
+        {"lineart-energy-bias", &config_struct->lineart_energy_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},
         {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias},
         {"noise-level-q-bias", &config_struct->noise_level_q_bias}

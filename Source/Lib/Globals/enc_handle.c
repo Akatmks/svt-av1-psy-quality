@@ -4146,6 +4146,12 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else
             scs->static_config.texture_ac_bias = scs->static_config.ac_bias;
     }
+    if (scs->static_config.lineart_energy_bias == DEFAULT) {
+        if (scs->static_config.high_fidelity_encode_psy_bias)
+            scs->static_config.lineart_energy_bias = 0.98;
+        else
+            scs->static_config.lineart_energy_bias = 1.00;
+    }
     if (scs->static_config.texture_energy_bias == DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 5.0)
             scs->static_config.texture_energy_bias = 1.10;
@@ -5000,6 +5006,7 @@ static void copy_api_from_app(
     // AC bias
     scs->static_config.ac_bias = config_struct->ac_bias;
     scs->static_config.texture_ac_bias = config_struct->texture_ac_bias;
+    scs->static_config.lineart_energy_bias = config_struct->lineart_energy_bias;
     scs->static_config.texture_energy_bias = config_struct->texture_energy_bias;
 
     // TX bias

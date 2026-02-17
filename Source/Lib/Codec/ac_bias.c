@@ -233,7 +233,9 @@ double get_psy_bias_effective_ac_bias(PictureControlSet *pcs, ModeDecisionContex
 double get_psy_bias_effective_energy_bias(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     const uint16_t blk_variance = get_variance_for_cu_16x16_min(ctx->blk_geom, pcs->ppcs->variance[ctx->sb_index]);
 
-    if (blk_variance >= pcs->scs->static_config.lineart_variance_thr >> 2)
+    if (blk_variance >= pcs->scs->static_config.lineart_variance_thr)
+        return pcs->scs->static_config.lineart_energy_bias;
+    else if (blk_variance >= pcs->scs->static_config.lineart_variance_thr >> 2)
         return 1.0;
     else if (blk_variance >= pcs->scs->static_config.texture_variance_thr >> 3)
         return (pcs->scs->static_config.texture_energy_bias - 1.0) * ((double)1/3) + 1.0;
