@@ -254,12 +254,12 @@
 #define CDEF_BIAS_DAMPING_OFFSET_TOKEN "--cdef-bias-damping-offset"
 #define BALANCING_Q_BIAS_TOKEN "--balancing-q-bias"
 #define BALANCING_LUMINANCE_Q_BIAS_TOKEN "--balancing-luminance-q-bias"
+#define BALANCING_NOISE_LEVEL_Q_BIAS_TOKEN "--balancing-noise-level-q-bias"
 #define BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN "--balancing-luminance-lambda-bias"
 #define BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN "--balancing-texture-lambda-bias"
 #define BALANCING_R0_BASED_LAYER_TOKEN "--balancing-r0-based-layer"
 #define BALANCING_R0_DAMPENING_LAYER_TOKEN "--balancing-r0-dampening-layer"
 #define BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN "--balancing-tpl-intra-mode-beta-bias"
-#define NOISE_LEVEL_Q_BIAS_TOKEN "--noise-level-q-bias"
 #define SHARP_TX_TOKEN "--sharp-tx"
 #define HBD_MDS_TOKEN "--hbd-mds"
 #define ALT_SSIM_TUNING_TOKEN "--alt-ssim-tuning"
@@ -1516,6 +1516,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Balancing luminance Q bias [0.0-25.0]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     BALANCING_NOISE_LEVEL_Q_BIAS_TOKEN,
+     "[PSY] Balancing noise level Q bias, default is 1.0 [0.5-2.0]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN,
      "[PSY] Balancing luminance lambda bias [0.0-0.9]",
      set_cfg_generic_token},
@@ -1526,10 +1530,6 @@ ConfigEntry config_entry_psy[] = {
     {SINGLE_INPUT,
      BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN,
      "[PSY] Boost a Super Block if TPL search result favours intra instead of inter prediction modes, default is 1 [0-1]",
-     set_cfg_generic_token},
-    {SINGLE_INPUT,
-     NOISE_LEVEL_Q_BIAS_TOKEN,
-     "[PSY] Noise level Q bias, default is 1.0 [0.67-1.50]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      SHARP_TX_TOKEN,
@@ -1820,23 +1820,15 @@ ConfigEntry config_entry[] = {
 
     // Balancing Q Bias
     {SINGLE_INPUT, BALANCING_Q_BIAS_TOKEN, "BalancingQBias", set_cfg_generic_token},
-    // Balancing Luminance Q Bias
     {SINGLE_INPUT, BALANCING_LUMINANCE_Q_BIAS_TOKEN, "BalancingLuminanceQBias", set_cfg_generic_token},
-    // Balancing Luminance Lambda Bias
+    {SINGLE_INPUT, BALANCING_NOISE_LEVEL_Q_BIAS_TOKEN, "BalancingNoiseLevelQBias", set_cfg_generic_token},
     {SINGLE_INPUT, BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN, "BalancingLuminanceLambdaBias", set_cfg_generic_token},
-    // Balancing Texture Lambda Bias
     {SINGLE_INPUT, BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN, "BalancingTextureLambdaBias", set_cfg_generic_token},
 
-    // Balancing r0-based Layer
     {SINGLE_INPUT, BALANCING_R0_BASED_LAYER_TOKEN, "BalancingR0BasedLayer", set_cfg_generic_token},
-    // Balancing Beta Dampening Layer
     {SINGLE_INPUT, BALANCING_R0_DAMPENING_LAYER_TOKEN, "BalancingR0DampeningLayer", set_cfg_generic_token},
 
-    // Balancing TPL Intra Mode Beta Bias
     {SINGLE_INPUT, BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN, "BalancingTPLIntraModeBetaBias", set_cfg_generic_token},
-
-    // Noise Level Q Bias
-    {SINGLE_INPUT, NOISE_LEVEL_Q_BIAS_TOKEN, "NoiseLevelQBias", set_cfg_generic_token},
 
     // Sharp TX
     {SINGLE_INPUT, SHARP_TX_TOKEN, "SharpTX", set_cfg_generic_token},

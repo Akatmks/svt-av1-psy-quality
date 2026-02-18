@@ -1227,6 +1227,15 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     uint8_t balancing_luminance_q_bias;
     /**
+     * @brief balancing noise level Q bias
+     * Max value: 2.0
+     * Min value: 0.5
+     * >1: boost frames with low noise
+     * <1: dampen frames with low noise
+     * Default is 1.0
+     */
+    double balancing_noise_level_q_bias;
+    /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0
      * Max value is 0.9
@@ -1261,16 +1270,6 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is 1
      */
     uint8_t balancing_tpl_intra_mode_beta_bias;
-
-    /**
-     * @brief noise level Q bias
-     * Max value: 1.5
-     * Min value: 0.67
-     * >1: boost frames with low noise
-     * <1: dampen frames with low noise
-     * Default is 1.0
-     */
-    double noise_level_q_bias;
 
     /**
      * @brief Enable sharp-tx, a toggle that enables much sharper transforms decisions for higher fidelity output,

@@ -4726,19 +4726,14 @@ static void copy_api_from_app(
 
     // Balancing Q bias
     scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
-    // Balancing luminance Q bias
     scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
-    // Balancing luminance lambda bias
+    scs->static_config.balancing_noise_level_q_bias = config_struct->balancing_noise_level_q_bias;
     scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
-    // Balancing texture lambda bias
     scs->static_config.balancing_texture_lambda_bias = config_struct->balancing_texture_lambda_bias;
 
-    // Balancing r0-based layer
     scs->static_config.balancing_r0_based_layer = config_struct->balancing_r0_based_layer;
-    // Balancing r0 dampening layer
     scs->static_config.balancing_r0_dampening_layer = config_struct->balancing_r0_dampening_layer;
 
-    // Balancing TPL intra mode beta bias
     scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
 
     // `-psy-bias`
@@ -5033,9 +5028,6 @@ static void copy_api_from_app(
     memcpy(scs->static_config.texture_cdef_bias_min_cdef, config_struct->texture_cdef_bias_min_cdef, 4 * sizeof(uint8_t));
     scs->static_config.texture_cdef_bias_max_sec_cdef_rel = config_struct->texture_cdef_bias_max_sec_cdef_rel;
     scs->static_config.cdef_bias_damping_offset = config_struct->cdef_bias_damping_offset;
-
-    // Noise level Q bias
-    scs->static_config.noise_level_q_bias = config_struct->noise_level_q_bias;
 
     // Sharp TX
     scs->static_config.sharp_tx = config_struct->sharp_tx;

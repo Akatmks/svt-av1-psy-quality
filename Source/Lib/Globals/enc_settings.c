@@ -1217,6 +1217,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: balancing-q-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (config->balancing_noise_level_q_bias < 0.5 || config->balancing_noise_level_q_bias > 2.0) {
+        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.50 and 2.00\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
 
     if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.90) &&
         config->balancing_luminance_lambda_bias != DEFAULT) {
@@ -1242,11 +1246,6 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
 
     if (config->balancing_tpl_intra_mode_beta_bias > 1 && config->balancing_tpl_intra_mode_beta_bias != UINT8_DEFAULT) {
         SVT_ERROR("Instance %u: balancing-tpl-intra-mode-beta-bias must be between 0 and 1\n", channel_number + 1);
-        return_error = EB_ErrorBadParameter;
-    }
-
-    if (config->noise_level_q_bias < (double)2/3 || config->noise_level_q_bias > 1.5) {
-        SVT_ERROR("Instance %u: noise-level-q-bias must be between 0.67 and 1.50\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1473,13 +1472,13 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->texture_cdef_bias_max_sec_cdef_rel = 0;
     config_ptr->cdef_bias_damping_offset          = 0;
     config_ptr->balancing_q_bias                  = UINT8_DEFAULT;
-    config_ptr->balancing_r0_based_layer          = INT8_DEFAULT;
-    config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
     config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
+    config_ptr->balancing_noise_level_q_bias      = 1.0;
     config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
     config_ptr->balancing_texture_lambda_bias     = DEFAULT;
+    config_ptr->balancing_r0_based_layer          = INT8_DEFAULT;
+    config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
     config_ptr->balancing_tpl_intra_mode_beta_bias = UINT8_DEFAULT;
-    config_ptr->noise_level_q_bias                = 1.0;
     config_ptr->sharp_tx                          = 1;
     config_ptr->hbd_mds                           = 0;
     config_ptr->alt_ssim_tuning                   = FALSE;
@@ -1647,34 +1646,37 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                          config->frame_luma_bias >= config->luminance_qp_bias ? config->frame_luma_bias : config->luminance_qp_bias);
 
             if (config->balancing_r0_dampening_layer <= config->balancing_r0_based_layer)
-                SVT_INFO("SVT [config]: balancing Q - r0-based layer / r0 dampening layer \t\t: <=%d / >=%d\n",
+                SVT_INFO("SVT [config]: balancing bias - r0-based layer / r0 dampening layer \t\t: <=%d / >=%d\n",
                          config->balancing_r0_based_layer,
                          config->balancing_r0_dampening_layer);
             else if (config->balancing_r0_based_layer != -3)
-                SVT_INFO("SVT [config]: balancing Q - r0-based layer / r0 dampening \t\t\t: <=%d / no\n",
+                SVT_INFO("SVT [config]: balancing bias - r0-based layer / r0 dampening \t\t\t: <=%d / no\n",
                          config->balancing_r0_based_layer);
         }
         else { // config->balancing_q_bias
-            if (config->balancing_r0_based_layer == 0)
+            if (config->balancing_noise_level_q_bias == 1.0)
+                SVT_INFO("SVT [config]: balancing - Q bias / luminance Q bias \t\t\t\t: based / %d\n",
+                         config->balancing_luminance_q_bias);
+            else
+                SVT_INFO("SVT [config]: balancing - Q bias / luminance Q bias / noise level Q bias \t: based / %d / %.2f\n",
+                         config->balancing_luminance_q_bias,
+                         config->balancing_noise_level_q_bias);
+
+            if (config->balancing_r0_based_layer == 0) {
                 if (config->balancing_r0_dampening_layer > config->balancing_r0_based_layer)
-                    SVT_INFO("SVT [config]: balancing Q - bias / luminance bias / r0-based decision \t: based / %d / full\n",
-                             config->balancing_luminance_q_bias);
+                    SVT_INFO("SVT [config]: balancing - r0-based decision \t\t\t\t\t: full\n");
                 else
-                    SVT_INFO("SVT [config]: balancing Q - bias / luminance bias / r0 / r0 dampening layer \t: based / %d / full decision / >=%d\n",
-                             config->balancing_luminance_q_bias,
+                    SVT_INFO("SVT [config]: balancing - r0-based decision / r0 dampening layer \t\t: full / >=%d\n",
                              config->balancing_r0_dampening_layer);
+            }
             else {
                 if (config->balancing_r0_dampening_layer > config->balancing_r0_based_layer)
-                    SVT_INFO("SVT [config]: balancing Q - bias / luminance bias / r0-based layer \t\t: based / %d / <=%d\n",
-                             config->balancing_luminance_q_bias,
+                    SVT_INFO("SVT [config]: balancing - r0-based layer \t\t\t\t\t: <=%d\n",
                              config->balancing_r0_based_layer);
-                else {
-                    SVT_INFO("SVT [config]: balancing Q - bias / luminance bias \t\t\t\t: based / %d\n",
-                             config->balancing_luminance_q_bias);
-                    SVT_INFO("SVT [config]: balancing Q - r0-based layer / r0 dampening layer \t\t: <=%d / >=%d\n",
+                else
+                    SVT_INFO("SVT [config]: balancing - r0-based layer / r0 dampening layer \t\t: <=%d / >=%d\n",
                              config->balancing_r0_based_layer,
                              config->balancing_r0_dampening_layer);
-                }
             }
         }
 
@@ -3062,14 +3064,14 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         double     *out;
     } double_opts[] = {
         {"qp-scale-compress-strength", &config_struct->qp_scale_compress_strength},
+        {"balancing-noise-level-q-bias", &config_struct->balancing_noise_level_q_bias},
         {"balancing-luminance-lambda-bias", &config_struct->balancing_luminance_lambda_bias},
         {"balancing-texture-lambda-bias", &config_struct->balancing_texture_lambda_bias},
         {"ac-bias", &config_struct->ac_bias},
         {"texture-ac-bias", &config_struct->texture_ac_bias},
         {"lineart-energy-bias", &config_struct->lineart_energy_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},
-        {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias},
-        {"noise-level-q-bias", &config_struct->noise_level_q_bias}
+        {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias}
     };
     const size_t double_opts_size = sizeof(double_opts) / sizeof(double_opts[0]);
 

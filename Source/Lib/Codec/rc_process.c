@@ -774,16 +774,15 @@ static int svt_av1_get_q_index_from_qstep_ratio(int leaf_qindex, double qstep_ra
     }
     return qindex;
 }
-static int noise_level_q_bias_core(PictureControlSet *pcs, SequenceControlSet *scs, int qindex) {
-    const int lower_thr = pcs->ppcs->noise_level_thr + (pcs->ppcs->noise_level_thr >> 4); // 1.0625 (~15938)
-    // upper_thr 2.0625 (~30938)
-
-    if (scs->static_config.noise_level_q_bias != 1.0 && pcs->ppcs->noise_level_thr) {
-        double qstep_ratio = CLIP3(0.0, 1.0, (double)(pcs->ppcs->noise_level - lower_thr) / pcs->ppcs->noise_level_thr);
-        if (scs->static_config.noise_level_q_bias > 1.0)
-            qstep_ratio = (qstep_ratio - 1.0) * (scs->static_config.noise_level_q_bias - 1.0) + 1.0;
+static int balancing_noise_level_q_bias_core(PictureControlSet *pcs, SequenceControlSet *scs, int qindex) {
+    if (scs->static_config.balancing_noise_level_q_bias != 1.0 && pcs->ppcs->noise_level) {
+        const int32_t noise_level_thr = CLIP3(13500, 17500, pcs->ppcs->noise_level_thr);
+        // 16000 ~ 32000
+        double qstep_ratio = CLIP3(0.0, 1.0, (double)(pcs->ppcs->noise_level - noise_level_thr) / noise_level_thr);
+        if (scs->static_config.balancing_noise_level_q_bias > 1.0)
+            qstep_ratio = (scs->static_config.balancing_noise_level_q_bias - 1.0) * (qstep_ratio - 1.0) + 1.0;
         else // < 0
-            qstep_ratio = qstep_ratio * (scs->static_config.noise_level_q_bias - 1.0) + 1.0;
+            qstep_ratio = (scs->static_config.balancing_noise_level_q_bias - 1.0) * qstep_ratio + 1.0;
 
         qindex = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, scs->static_config.encoder_bit_depth);
 
@@ -3493,11 +3492,11 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                                     av1_rc_init(scs);
                                 }
 
-                                new_qindex = noise_level_q_bias_core(pcs, scs, rc->active_worst_quality);
+                                new_qindex = balancing_noise_level_q_bias_core(pcs, scs, rc->active_worst_quality);
 
                                 new_qindex = crf_qindex_calc(pcs, rc, new_qindex);
                             } else { // if CQP
-                                new_qindex = noise_level_q_bias_core(pcs, scs, scs_qindex);
+                                new_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex);
 
                                 new_qindex = cqp_qindex_calc(pcs, new_qindex);
                             }
