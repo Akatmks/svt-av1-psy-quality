@@ -239,6 +239,7 @@
 #define PSY_BIAS_COEFF_LVL_OFFSET_TOKEN "--psy-bias-coeff-lvl-offset"
 #define PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN "--psy-bias-mds0-intra-inter-mode-bias"
 #define PSY_BIAS_INTER_MODE_BIAS_TOKEN "--psy-bias-inter-mode-bias"
+#define PSY_BIAS_QM_BIAS_TOKEN "--psy-bias-qm-bias"
 #define HIGH_FIDELITY_ENCODE_PSY_BIAS "--high-fidelity-encode-psy-bias"
 #define DLF_BIAS_TOKEN "--dlf-bias"
 #define DLF_SHARPNESS_TOKEN "--dlf-sharpness"
@@ -1448,6 +1449,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Bias against intra mode in non base layers. [0-5]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     PSY_BIAS_QM_BIAS_TOKEN,
+     "[PSY] Increase QM level in `VLOW_LVL`. [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      HIGH_FIDELITY_ENCODE_PSY_BIAS,
      "[PSY] Bias various features for high fidelity encoding. [0-1]",
      set_cfg_generic_token},
@@ -1521,11 +1526,11 @@ ConfigEntry config_entry_psy[] = {
      set_cfg_generic_token},
     {SINGLE_INPUT,
      BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN,
-     "[PSY] Balancing luminance lambda bias [0.0-0.9]",
+     "[PSY] Balancing luminance lambda bias [0.0-0.99]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN,
-     "[PSY] Balancing texture lambda bias [0.0-0.9]",
+     "[PSY] Balancing texture lambda bias [0.0-0.99]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN,
@@ -1799,6 +1804,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, PSY_BIAS_COEFF_LVL_OFFSET_TOKEN, "PsyBiasCoeffLvlOffset", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_MDS0_INTRA_INTER_MODE_BIAS_TOKEN, "PsyBiasmds0IntraInterModeBias", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_INTER_MODE_BIAS_TOKEN, "PsyBiasInterModeBias", set_cfg_generic_token},
+    {SINGLE_INPUT, PSY_BIAS_QM_BIAS_TOKEN, "PsyBiasQMBias", set_cfg_generic_token},
 
     {SINGLE_INPUT, HIGH_FIDELITY_ENCODE_PSY_BIAS, "HighFidelityEncodePsyBias", set_cfg_generic_token},
 

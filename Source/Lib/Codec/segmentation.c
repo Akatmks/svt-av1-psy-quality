@@ -200,6 +200,54 @@ uint16_t get_variance_for_cu_max_32x32_min(const BlockGeom *blk_geom, uint16_t *
     }
 }
 
+// blk_geom can be NULL for entire 64x64 SB
+uint16_t get_variance_for_cu_min_32x32_min(const BlockGeom *blk_geom, uint16_t *variance_ptr) {
+    int start_index;
+
+    if (blk_geom != NULL)
+        //Assumes max CU size is 64
+        switch (blk_geom->bsize) {
+        case BLOCK_4X4:
+        case BLOCK_4X8:
+        case BLOCK_8X4:
+        case BLOCK_8X8:
+        case BLOCK_16X8:
+        case BLOCK_16X4:
+        case BLOCK_32X8:
+        case BLOCK_8X16:
+        case BLOCK_4X16:
+        case BLOCK_8X32:
+        case BLOCK_16X16:
+        case BLOCK_32X16:
+        case BLOCK_16X32:
+        case BLOCK_32X32:
+            start_index = ME_TIER_ZERO_PU_32x32_0 + ((blk_geom->org_x >> 5) + (blk_geom->org_y >> 5 << 1));
+            return variance_ptr[start_index];
+    
+        case BLOCK_64X16:
+        case BLOCK_64X32:
+            start_index = ME_TIER_ZERO_PU_32x32_0 + ((blk_geom->org_x >> 5) + (blk_geom->org_y >> 5 << 1));
+            return AOMMIN(variance_ptr[start_index], variance_ptr[start_index + 1]);
+    
+        case BLOCK_16X64:
+        case BLOCK_32X64:
+            start_index = ME_TIER_ZERO_PU_32x32_0 + ((blk_geom->org_x >> 5) + (blk_geom->org_y >> 5 << 1));
+            return AOMMIN(variance_ptr[start_index], variance_ptr[start_index + 2]);
+    
+    
+        case BLOCK_64X64:
+        default:
+            start_index = ME_TIER_ZERO_PU_32x32_0;
+            return AOMMIN(AOMMIN(variance_ptr[start_index], variance_ptr[start_index + 1]),
+                          AOMMIN(variance_ptr[start_index + 2], variance_ptr[start_index + 3]));
+        }
+    else {
+        start_index = ME_TIER_ZERO_PU_32x32_0;
+        return AOMMIN(AOMMIN(variance_ptr[start_index], variance_ptr[start_index + 1]),
+                      AOMMIN(variance_ptr[start_index + 2], variance_ptr[start_index + 3]));
+    }
+}
+
 static void roi_map_apply_segmentation_based_quantization(const BlockGeom *blk_geom, PictureControlSet *pcs,
                                                           SuperBlock *sb_ptr, BlkStruct *blk_ptr) {
     SequenceControlSet    *scs                 = pcs->ppcs->scs;

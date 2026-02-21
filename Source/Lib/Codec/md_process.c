@@ -544,7 +544,7 @@ static void av1_lambda_assign_md(PictureControlSet *pcs, ModeDecisionContext *ct
         double balancing_bias = CLIP3(0, 0x40, balancing_luminance_bias_base - pcs->ppcs->balancing_luminance[ctx->sb_index]) *
                                 (((double)1/0x40) * pcs->scs->static_config.balancing_luminance_lambda_bias);
         // texture
-        const uint16_t blks_variance = get_variance_for_cu_max_32x32_min(NULL, pcs->ppcs->variance[ctx->sb_index]);
+        const uint16_t blks_variance = get_variance_for_cu_min_32x32_min(NULL, pcs->ppcs->variance[ctx->sb_index]);
         if (blks_variance >= pcs->scs->static_config.texture_variance_thr >> 2)
             ;
         else if (blks_variance >= pcs->scs->static_config.texture_variance_thr >> 3)
@@ -557,10 +557,10 @@ static void av1_lambda_assign_md(PictureControlSet *pcs, ModeDecisionContext *ct
         balancing_bias = 1.0 - balancing_bias;
 
         if (balancing_bias != 1.0) {
-            ctx->full_lambda_md[0] = lrint(ctx->full_lambda_md[0] * balancing_bias);
-            ctx->fast_lambda_md[0] = lrint(ctx->fast_lambda_md[0] * balancing_bias);
-            ctx->full_lambda_md[1] = lrint(ctx->full_lambda_md[1] * balancing_bias);
-            ctx->fast_lambda_md[1] = lrint(ctx->fast_lambda_md[1] * balancing_bias);
+            ctx->full_lambda_md[0] = AOMMAX(lrint(ctx->full_lambda_md[0] * balancing_bias), 1);
+            ctx->fast_lambda_md[0] = AOMMAX(lrint(ctx->fast_lambda_md[0] * balancing_bias), 1);
+            ctx->full_lambda_md[1] = AOMMAX(lrint(ctx->full_lambda_md[1] * balancing_bias), 1);
+            ctx->fast_lambda_md[1] = AOMMAX(lrint(ctx->fast_lambda_md[1] * balancing_bias), 1);
         }
     }
 

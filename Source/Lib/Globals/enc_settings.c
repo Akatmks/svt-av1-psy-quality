@@ -1176,6 +1176,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: psy-bias-inter-mode-bias must be between 0 and 5\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (config->psy_bias_qm_bias > 1 && config->psy_bias_qm_bias != UINT8_DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-qm-bias must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
 
     if (!(config->high_fidelity_encode_psy_bias >= 0.0 && config->high_fidelity_encode_psy_bias <= 1.0) &&
         config->high_fidelity_encode_psy_bias != DEFAULT) {
@@ -1222,14 +1226,14 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.90) &&
+    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.990001) &&
         config->balancing_luminance_lambda_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.90\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.99\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->balancing_texture_lambda_bias >= 0.0 && config->balancing_texture_lambda_bias <= 0.90) &&
+    if (!(config->balancing_texture_lambda_bias >= 0.0 && config->balancing_texture_lambda_bias <= 0.990001) &&
         config->balancing_texture_lambda_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-texture-lambda-bias must be between 0.0 and 0.90\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-texture-lambda-bias must be between 0.0 and 0.99\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1444,6 +1448,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_coeff_lvl_offset         = INT8_DEFAULT;
     config_ptr->psy_bias_mds0_intra_inter_mode_bias = UINT8_DEFAULT;
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
+    config_ptr->psy_bias_qm_bias                  = UINT8_DEFAULT;
     config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
@@ -3017,6 +3022,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"psy-bias-disable-sgrproj", &config_struct->psy_bias_disable_sgrproj},
         {"psy-bias-mds0-intra-inter-mode-bias", &config_struct->psy_bias_mds0_intra_inter_mode_bias},
         {"psy-bias-inter-mode-bias", &config_struct->psy_bias_inter_mode_bias},
+        {"psy-bias-qm-bias", &config_struct->psy_bias_qm_bias},
         {"dlf-bias", &config_struct->dlf_bias},
         {"dlf-sharpness", &config_struct->dlf_sharpness},
         {"cdef-bias", &config_struct->cdef_bias},

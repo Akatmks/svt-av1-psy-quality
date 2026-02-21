@@ -7825,10 +7825,7 @@ static void post_mds0_nic_pruning(PictureControlSet *pcs, ModeDecisionContext *c
                 (int)(mult * MAX((best_md_stage_cost / ((ctx->blk_geom->bwidth * ctx->blk_geom->bheight) << 10)), 1) *
                       ((5 * pcs->ppcs->scs->static_config.qp) - 50)));
 
-    uint64_t                      mds1_class_th[4];
-    mds1_class_th[0] = mds1_class_th[1] = mds1_class_th[2] = mds1_class_th[3] = (pruning_ctrls.mds1_class_th * q_weight) / 1000;
-    if (pcs->scs->static_config.texture_psy_bias >= 4.0 && pcs->enc_mode <= ENC_M6)
-        mds1_class_th[1]                                   = (uint64_t)~0;
+    uint64_t                      mds1_class_th            = (pruning_ctrls.mds1_class_th * q_weight) / 1000;
     uint8_t                       mds1_band_cnt            = pruning_ctrls.mds1_band_cnt;
     uint16_t                      mds1_cand_th_rank_factor = pruning_ctrls.mds1_cand_th_rank_factor;
     uint64_t                      mds1_cand_base_th_intra  = pruning_ctrls.mds1_cand_base_th_intra;
@@ -7858,24 +7855,24 @@ static void post_mds0_nic_pruning(PictureControlSet *pcs, ModeDecisionContext *c
     ModeDecisionCandidateBuffer **cand_bf_arr              = ctx->cand_bf_ptr_array;
     for (CandClass cidx = CAND_CLASS_0; cidx < CAND_CLASS_TOTAL; cidx++) {
         const uint64_t mds1_cand_th = is_intra_class(cidx) ? mds1_cand_base_th_intra : mds1_cand_base_th_inter;
-        if ((mds1_cand_th != (uint64_t)~0 || mds1_class_th[cidx] != (uint64_t)~0) && ctx->md_stage_0_count[cidx] > 0 &&
+        if ((mds1_cand_th != (uint64_t)~0 || mds1_class_th != (uint64_t)~0) && ctx->md_stage_0_count[cidx] > 0 &&
             ctx->md_stage_1_count[cidx] > 0) {
             const uint32_t *cand_buff = ctx->cand_buff_indices[cidx];
             const uint64_t  best_cost = *cand_bf_arr[cand_buff[0]]->fast_cost;
             // inter class pruning
             if (best_cost && best_md_stage_cost && best_cost != best_md_stage_cost) {
-                if (mds1_class_th[cidx] == 0) {
+                if (mds1_class_th == 0) {
                     ctx->md_stage_1_count[cidx] = 0;
                     continue;
                 }
                 uint64_t dev = ((best_cost - best_md_stage_cost) * 100) / best_md_stage_cost;
                 if (dev) {
-                    if (dev >= mds1_class_th[cidx]) {
+                    if (dev >= mds1_class_th) {
                         ctx->md_stage_1_count[cidx] = 0;
                         continue;
                     }
                     if (mds1_band_cnt >= 3 && ctx->md_stage_1_count[cidx] > 1) {
-                        const uint8_t band_idx      = (uint8_t)(dev * (mds1_band_cnt - 1) / mds1_class_th[cidx]);
+                        const uint8_t band_idx      = (uint8_t)(dev * (mds1_band_cnt - 1) / mds1_class_th);
                         ctx->md_stage_1_count[cidx] = DIVIDE_AND_ROUND(ctx->md_stage_1_count[cidx], band_idx + 1);
                     }
                 }

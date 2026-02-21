@@ -1151,6 +1151,7 @@ typedef struct EbSvtAv1EncConfiguration {
     int8_t psy_bias_coeff_lvl_offset;
     uint8_t psy_bias_mds0_intra_inter_mode_bias;
     uint8_t psy_bias_inter_mode_bias;
+    uint8_t psy_bias_qm_bias;
 
     /**
      * @brief Bias various features for high fidelity encoding.
@@ -1238,14 +1239,14 @@ typedef struct EbSvtAv1EncConfiguration {
     /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0
-     * Max value is 0.9
+     * Max value is 0.99
      * 0.0: disabled
      */
     double balancing_luminance_lambda_bias;
     /**
      * @brief Enable balancing texture lambda bias
      * Min value is 0.0
-     * Max value is 0.9
+     * Max value is 0.99
      * 0.0: disabled
      */
     double balancing_texture_lambda_bias;
@@ -1335,7 +1336,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    // - 2 * sizeof(Bool) - 31 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 9 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 9 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

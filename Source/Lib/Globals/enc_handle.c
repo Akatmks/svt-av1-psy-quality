@@ -4053,7 +4053,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.balancing_texture_lambda_bias == DEFAULT) {
         if (scs->static_config.balancing_q_bias) {
             if (scs->static_config.high_fidelity_encode_psy_bias)
-                scs->static_config.balancing_texture_lambda_bias = 0.4;
+                scs->static_config.balancing_texture_lambda_bias = 0.9;
             else
                 scs->static_config.balancing_texture_lambda_bias = 0.0;
         }
@@ -4121,6 +4121,13 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.psy_bias_coeff_lvl_offset = 2;
         else
             scs->static_config.psy_bias_coeff_lvl_offset = 0;
+    }
+
+    if (scs->static_config.psy_bias_qm_bias == UINT8_DEFAULT) {
+        if (scs->static_config.lineart_psy_bias >= 3.0 || scs->static_config.texture_psy_bias >= 3.0)
+            scs->static_config.psy_bias_qm_bias = 1;
+        else
+            scs->static_config.psy_bias_qm_bias = 0;
     }
 
     if (scs->static_config.noise_norm_strength == UINT8_DEFAULT) {
@@ -4236,11 +4243,19 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     // In low delay mode, sb size is set to 64
     // in 240P resolution, sb size is set to 64
     if ((scs->static_config.fast_decode && scs->static_config.qp <= 56 && !(scs->input_resolution <= INPUT_SIZE_360p_RANGE)) ||
-        scs->static_config.resize_mode > RESIZE_NONE ||
+        scs->static_config.resize_mode > RESIZE_NONE         ||
         scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B ||
-        (scs->input_resolution == INPUT_SIZE_240p_RANGE) ||
-        scs->static_config.enable_variance_boost ||
-        scs->static_config.balancing_q_bias)
+        (scs->input_resolution == INPUT_SIZE_240p_RANGE)     ||
+        scs->static_config.enable_variance_boost             ||
+        scs->static_config.balancing_q_bias                  ||
+        scs->static_config.lineart_psy_bias >= 1.0           ||
+        scs->static_config.texture_psy_bias >= 1.0           ||
+        scs->static_config.balancing_luminance_q_bias        ||
+        scs->static_config.balancing_luminance_lambda_bias   ||
+        scs->static_config.balancing_texture_lambda_bias     ||
+        scs->static_config.texture_ac_bias != scs->static_config.ac_bias ||
+        scs->static_config.lineart_energy_bias != 1.0        ||
+        scs->static_config.texture_energy_bias != 1.0)
         scs->super_block_size = 64;
     else
         if (scs->static_config.enc_mode <= ENC_M1)
@@ -4521,7 +4536,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.texture_psy_bias >= 1.0           ||
         scs->static_config.balancing_luminance_q_bias        ||
         scs->static_config.balancing_luminance_lambda_bias   ||
-        scs->static_config.balancing_texture_lambda_bias)
+        scs->static_config.balancing_texture_lambda_bias     ||
+        scs->static_config.texture_ac_bias != scs->static_config.ac_bias ||
+        scs->static_config.lineart_energy_bias != 1.0        ||
+        scs->static_config.texture_energy_bias != 1.0)
         scs->calculate_variance = 1;
     else if (scs->static_config.enc_mode <= ENC_M6)
         scs->calculate_variance = 1;
@@ -4751,6 +4769,7 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_coeff_lvl_offset = config_struct->psy_bias_coeff_lvl_offset;
     scs->static_config.psy_bias_mds0_intra_inter_mode_bias = config_struct->psy_bias_mds0_intra_inter_mode_bias;
     scs->static_config.psy_bias_inter_mode_bias = config_struct->psy_bias_inter_mode_bias;
+    scs->static_config.psy_bias_qm_bias = config_struct->psy_bias_qm_bias;
 
     scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;
     if (scs->static_config.high_fidelity_encode_psy_bias == DEFAULT) {

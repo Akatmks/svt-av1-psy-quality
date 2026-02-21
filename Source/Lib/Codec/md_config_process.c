@@ -181,9 +181,10 @@ static INLINE int aom_get_qmlevel(int qindex, int first, int last) {
 static INLINE double sigmoid_qm_func(int qindex) {
     return 2 / (1 + exp(0.01 * qindex));
 }
-static INLINE int psy_get_qmlevel(int qindex, int first, int last) {
+static INLINE int psy_get_qmlevel(int qindex, int first, int last, int psy_bias_qm_bias) {
     // mapping qindex(0, 255) to QM level(first, last), temporary(?) fix to avoid crash using CLIP3.
-    return CLIP3(first, last, (int)rint(first + (pow((double)(qindex), sigmoid_qm_func(qindex)) * (last + 1 - first)) / pow(QINDEX_RANGE, sigmoid_qm_func(qindex))));
+    return CLIP3(first, last, (int)rint(first + (pow((double)(qindex), sigmoid_qm_func(qindex)) * (last + 1 - first)) / pow(QINDEX_RANGE, sigmoid_qm_func(qindex))) +
+                              psy_bias_qm_bias);
 }
 
 // Polynomial to determine QM levels tuned for still images
@@ -215,7 +216,9 @@ static INLINE int psy_still_get_qmlevel(int qindex, int min, int max) {
     return CLIP3(min, max, qm_level);
 }
 
-void svt_av1_qm_init(PictureParentControlSet *pcs) {
+static void svt_av1_qm_init(PictureControlSet *pcs) {
+    PictureParentControlSet *ppcs = pcs->ppcs;
+
     const uint8_t num_planes = 3; // MAX_MB_PLANE;// NM- No monochroma
     uint8_t       q, c, t;
     int32_t       current;
@@ -226,60 +229,66 @@ void svt_av1_qm_init(PictureParentControlSet *pcs) {
                 const int32_t size       = tx_size_2d[t];
                 const TxSize  qm_tx_size = av1_get_adjusted_tx_size(t);
                 if (q == NUM_QM_LEVELS - 1) {
-                    pcs->gqmatrix[q][c][t]  = NULL;
-                    pcs->giqmatrix[q][c][t] = NULL;
+                    ppcs->gqmatrix[q][c][t]  = NULL;
+                    ppcs->giqmatrix[q][c][t] = NULL;
                 } else if (t != qm_tx_size) { // Reuse matrices for 'qm_tx_size'
-                    pcs->gqmatrix[q][c][t]  = pcs->gqmatrix[q][c][qm_tx_size];
-                    pcs->giqmatrix[q][c][t] = pcs->giqmatrix[q][c][qm_tx_size];
+                    ppcs->gqmatrix[q][c][t]  = ppcs->gqmatrix[q][c][qm_tx_size];
+                    ppcs->giqmatrix[q][c][t] = ppcs->giqmatrix[q][c][qm_tx_size];
                 } else {
                     assert(current + size <= QM_TOTAL_SIZE);
-                    pcs->gqmatrix[q][c][t]  = &wt_matrix_ref[q][c >= 1][current];
-                    pcs->giqmatrix[q][c][t] = &iwt_matrix_ref[q][c >= 1][current];
+                    ppcs->gqmatrix[q][c][t]  = &wt_matrix_ref[q][c >= 1][current];
+                    ppcs->giqmatrix[q][c][t] = &iwt_matrix_ref[q][c >= 1][current];
                     current += size;
                 }
             }
         }
     }
 
-    if (pcs->frm_hdr.quantization_params.using_qmatrix) {
+    int psy_bias_qm_bias = 0;
+    if (pcs->scs->static_config.psy_bias_qm_bias) {
+        if (pcs->coeff_lvl == VLOW_LVL)
+            psy_bias_qm_bias = 1;
+    }
+
+    if (ppcs->frm_hdr.quantization_params.using_qmatrix) {
         const int32_t min_qmlevel = pcs->scs->static_config.min_qm_level;
         const int32_t max_qmlevel = pcs->scs->static_config.max_qm_level;
         const int32_t min_chroma_qmlevel = pcs->scs->static_config.min_chroma_qm_level;
         const int32_t max_chroma_qmlevel = pcs->scs->static_config.max_chroma_qm_level;
-        const int32_t base_qindex = pcs->frm_hdr.quantization_params.base_q_idx;
+        const int32_t base_qindex = ppcs->frm_hdr.quantization_params.base_q_idx;
 
         switch (pcs->scs->static_config.tune) {
             case 0:
                 //Chroma always seem to suffer too much with steep quantization matrices, so we're temporarily
                 //forcing not very steep quantization matrices for chroma channels
                 //Will enable for tune 0 and ideally within a range in the near future
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel, psy_bias_qm_bias);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel, psy_bias_qm_bias);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel, psy_bias_qm_bias);
                 break;
             case 2:
                 // Currently using Tune 3's curve for Tune 2
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel, psy_bias_qm_bias);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel, psy_bias_qm_bias);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel, psy_bias_qm_bias);
                 break;
             case 3:
                 //Chroma always seem to suffer too much with steep quantization matrices, so we're temporarily
                 //forcing not very steep quantization matrices for chroma channels
                 //Will enable for tune 3 and ideally within a range in the near future
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel, psy_bias_qm_bias);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel, psy_bias_qm_bias);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel, psy_bias_qm_bias);
                 break;
             case 4:
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_still_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_still_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_still_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = psy_still_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = psy_still_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = psy_still_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
                 break;
             default:
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = aom_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = aom_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = aom_get_qmlevel(base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = aom_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = aom_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U], min_chroma_qmlevel, max_chroma_qmlevel);
+                ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = aom_get_qmlevel(base_qindex + ppcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V], min_chroma_qmlevel, max_chroma_qmlevel);
                 break;
         }
 #if DEBUG_QM_LEVEL
@@ -333,7 +342,7 @@ void mode_decision_configuration_init_qp_update(PictureControlSet *pcs) {
     set_reference_sg_ep(pcs);
     set_global_motion_field(pcs);
 
-    svt_av1_qm_init(pcs->ppcs);
+    svt_av1_qm_init(pcs);
     MdRateEstimationContext *md_rate_est_ctx;
 
     md_rate_est_ctx = pcs->md_rate_est_ctx;
@@ -762,7 +771,7 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
         }
         set_global_motion_field(pcs);
 
-        svt_av1_qm_init(pcs->ppcs);
+        svt_av1_qm_init(pcs);
         MdRateEstimationContext *md_rate_est_ctx;
 
         // QP
