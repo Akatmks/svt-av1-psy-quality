@@ -760,7 +760,9 @@ static uint64_t picture_sse_calculations(PictureControlSet *pcs, EbPictureBuffer
                                                         input_align_height,
                                                         0,
                                                         dlf_ac_bias,
-                                                        1.0)
+                                                        1.0,
+                                                        0.0,
+                                                        NULL)
                                 : 0);
         } else if (plane == 1) {
             recon_coeff_buffer = (uint8_t *)&(
@@ -819,7 +821,9 @@ static uint64_t picture_sse_calculations(PictureControlSet *pcs, EbPictureBuffer
                                                         input_align_height,
                                                         1,
                                                         dlf_ac_bias,
-                                                        1.0)
+                                                        1.0,
+                                                        0.0,
+                                                        NULL)
                                 : 0);
         } else if (plane == 1) {
             recon_coeff_buffer = (uint8_t *)&(

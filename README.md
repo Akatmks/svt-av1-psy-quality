@@ -3,11 +3,10 @@ Experimental additions currently available on `exp`:
 - `--alt-tf-decay`
 - `--lineart-psy-bias`, `--texture-psy-bias` family ([@Akatmks](https://github.com/Akatmks))
 - `--balancing-q-bias` family ([@Akatmks](https://github.com/Akatmks))
-- `--texture-ac-bias` and `--texture-energy-bias` ([@Akatmks](https://github.com/Akatmks))
+- `--texture-ac-bias`, `--lineart-energy-bias`, `--texture-energy-bias`, and `--satd-bias` ([@Akatmks](https://github.com/Akatmks))
 - `--dlf-bias` family ([@Akatmks](https://github.com/Akatmks))
 - `--cdef-bias` family ([@Akatmks](https://github.com/Akatmks))
 - `--noise-level-thr` ([@Akatmks](https://github.com/Akatmks))
-- `--noise-level-q-bias` ([@Akatmks](https://github.com/Akatmks))
 
 Thank you to [@Akatmks](https://github.com/Akatmks) for the contribution of various features.
 

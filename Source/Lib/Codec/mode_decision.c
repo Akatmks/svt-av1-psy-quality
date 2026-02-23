@@ -5168,7 +5168,8 @@ uint64_t svt_spatial_full_distortion_ssim_kernel(uint8_t* input, uint32_t input_
                                                    int32_t recon_offset, uint32_t recon_stride,
                                                    uint32_t area_width, uint32_t area_height,
                                                    bool hbd, double effective_ac_bias,
-                                                   double effective_energy_bias) {
+                                                   double effective_energy_bias, double effective_satd_bias,
+                                                   const QmVal *satd_bias_qmatrix) {
     uint8_t m = 1;
     const uint32_t count = area_width * area_height;
 
@@ -5184,10 +5185,11 @@ uint64_t svt_spatial_full_distortion_ssim_kernel(uint8_t* input, uint32_t input_
             recon + recon_offset, recon_stride,
             area_width, area_height);
         if (effective_ac_bias) {
-            uint64_t ac_distortion = svt_psy_distortion(input + input_offset, input_stride,
+            psy_distortion = svt_psy_distortion(input + input_offset, input_stride,
                 recon + recon_offset, recon_stride,
-                area_width, area_height, effective_energy_bias);
-            psy_distortion = (uint64_t)(ac_distortion * effective_ac_bias);
+                area_width, area_height,
+                effective_ac_bias, effective_energy_bias, effective_satd_bias,
+                satd_bias_qmatrix);
         }
     } else {
         m = 8;
@@ -5195,10 +5197,11 @@ uint64_t svt_spatial_full_distortion_ssim_kernel(uint8_t* input, uint32_t input_
             (uint16_t *)recon + recon_offset, recon_stride,
             area_width, area_height);
         if (effective_ac_bias) {
-            uint64_t ac_distortion = svt_psy_distortion_hbd((uint16_t *)input + input_offset,
+            psy_distortion = svt_psy_distortion_hbd((uint16_t *)input + input_offset,
                 input_stride, (uint16_t *)recon + recon_offset, recon_stride,
-                area_width, area_height, effective_energy_bias);
-            psy_distortion = (uint64_t)(ac_distortion * effective_ac_bias);
+                area_width, area_height,
+                effective_ac_bias, effective_energy_bias, effective_satd_bias,
+                satd_bias_qmatrix);
         }
     }
 

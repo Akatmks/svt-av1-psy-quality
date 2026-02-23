@@ -100,8 +100,9 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **NoiseNormStrength**            | --noise-norm-strength       | [0-4]                          | 1           | Selectively boost AC coefficients to improve fine detail retention in certain circumstances                   |
 | **AcBias**                       | --ac-bias                   | [0.0-8.0]                      | 1.0         | Sets the strength of the internal RD metric to bias toward high-frequency error (helps with texture preservation and film grain retention) |
 | **TextureAcBias**                | --texture-ac-bias           | [0.0-64.0]                     | same as `--ac-bias` | `--ac-bias` strength in low variance regions. Application based on `--texture-variance-thr`, and protection based on `--lineart-variance-thr`. |
-| **LineartEnergyBias**            | --lineart-energy-bias       | [0.667-1.5]                    | 1.0         | Prefer higher energy even if the encode will have higher energy than the source in high variance regions.    |
+| **LineartEnergyBias**            | --lineart-energy-bias       | [0.667-1.5]                    | 1.0         | Prefer higher energy even if the encode will have higher energy than the source in high variance regions.     |
 | **TextureEnergyBias**            | --texture-energy-bias       | [0.667-1.5]                    | 1.0         | Prefer higher energy even if the encode will have higher energy than the source in low variance regions. Application based on `--texture-variance-thr`, and protection based on `--lineart-variance-thr`. |
+| **SATDBias**                     | --satd-bias                 | [0.0-16.                       | 0.0         | Add SATD calculation to distortion calculation.                                                               |
 | **TxBias**                       | --tx-bias                   | [0-3]                          | 0           | Transform size/type bias mode [0: disabled, 1: full, 2: transform size only, 3: interpolation filter only]    |
 | **HBDMDS**                       | --hbd-mds                   | [0-3]                          | 0           | Activation of high bit depth mode decision (0: default behavior, 1: full 10b MD, 2: hybrid 8/10b MD, 3: full 8b MD) |
 | **SharpTX**                      | --sharp-tx                  | [0-1]                          | 1           | Activation of sharp transform optimizations for higher fidelity encoding (cleaner output with slightly higher chances of artifacting) |
@@ -169,6 +170,8 @@ To use `--lineart-psy-bias`, select a level based on how much effort you want to
 A parameter worthy of attention is `--dlf-sharpness 7`. It is only enabled at a high `--lineart-psy-bias 6` level because it's highly clean source specific. Using this on texture heavy or noisy sources will result in a ton of blocking, but on the other hand, it's very, very good on clean source. You should enable this as well as `--noise-norm-strength 0` if you're encoding a clean source no matter what `--lineart-psy-bias` level you use.  
 
 Additionally, `--qm-min` and `--chroma-qm-min` can be adjusted as well for each sources for better quality. Lower `--dlf-bias-max-dlf` and `--cdef-bias-max-cdef` will be helpful on clean sources for better retention as well.  
+
+Other than the parameters listed here, you can also check out `--satd-bias 0.5`, `--lineart-energy-bias 0.98`, `--balancing-texture-lambda-bias 0.5` and see these parameters would be good for the source as well.  
 
 You should use `--lineart-variance-thr` to adjust the threshold above which a detail will be treated as lineart. On clean source, you want the `--lineart-variance-thr` to cover the weak lineart you want to protect. On noisy sources, weak lineart doesn't quite perform like lineart and performs more like texture, so it might not be needed to adjust the threshold. Regarding how to adjust the variance threshold, check [`--lineart-variance-thr` and `--texture-variance-thr` calculation](#--lineart-variance-thr-and---texture-variance-thr-calculation).  
 
@@ -241,12 +244,15 @@ Based on these base threshold, internally, the encoder convert this value severa
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`. Change it from applying only in frames of higher temporals level to applying to frames of all temporal levels including base frames.  
 * `--psy-bias-disable-me-8x8`: Revert `--lineart-psy-bias [>= 2]` settings back to `0`. Can be overridden.  
+* `--satd-bias`: Default changed from `0.00` to `1.00`. Can be overridden.  
 * `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
 * `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
 * `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
 * `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
 Additionally, `--balancing-noise-level-q-bias` such as `--balancing-noise-level-q-bias 1.10` may be beneficial for high fidelity encodes as well.  
+
+Although `--high-fidelity-encode-psy-bias` is enabled by default at `--crf [<= 16.00]`, some of these features can be beneficial to numerically higher `--crf` such as `--crf 24.00`, as well and you can try to apply some of these features manually when doing a smaller encode as well.  
 
 ## Rate Control Options
 

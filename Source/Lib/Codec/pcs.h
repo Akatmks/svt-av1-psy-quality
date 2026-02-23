@@ -443,6 +443,8 @@ typedef struct PictureControlSet {
     // different with input frame when reference scaling is enabled
     EbPictureBufferDesc *scaled_input_pic;
     bool                 rtc_tune;
+
+    QmVal satd_bias_qmatrix[16 + 64]; // 4x4 table then 8x8 table
 } PictureControlSet;
 
 // To optimize based on the max input size

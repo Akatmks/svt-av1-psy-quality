@@ -225,6 +225,7 @@
 #define TEXTURE_AC_BIAS_TOKEN "--texture-ac-bias"
 #define LINEART_ENERGY_BIAS_TOKEN "--lineart-energy-bias"
 #define TEXTURE_ENERGY_BIAS_TOKEN "--texture-energy-bias"
+#define SATD_BIAS_TOKEN "--satd-bias"
 #define TX_BIAS_TOKEN "--tx-bias"
 #define LOW_Q_TAPER_TOKEN "--low-q-taper"
 #define NOISE_LEVEL_THR_TOKEN "--noise-level-thr"
@@ -1393,6 +1394,10 @@ ConfigEntry config_entry_psy[] = {
      "Bias `--ac-bias` so that low variance regions prefer higher energy even if it's higher than the source. [1.0-1.5]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     SATD_BIAS_TOKEN,
+     "Add SATD calculation to distortion calculation. [0.0-16.0]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      TX_BIAS_TOKEN,
      "Transform size/type bias type, default is 0 [0-3]; 1 = full, 2, transform size only, 3 = interpolation only",
      set_cfg_generic_token},
@@ -1782,6 +1787,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, TEXTURE_AC_BIAS_TOKEN, "TextureAcBias", set_cfg_generic_token},
     {SINGLE_INPUT, LINEART_ENERGY_BIAS_TOKEN, "LineartEnergyBias", set_cfg_generic_token},
     {SINGLE_INPUT, TEXTURE_ENERGY_BIAS_TOKEN, "TextureEnergyBias", set_cfg_generic_token},
+    {SINGLE_INPUT, SATD_BIAS_TOKEN, "SATDBias", set_cfg_generic_token},
 
     // TX bias
     {SINGLE_INPUT, TX_BIAS_TOKEN, "TxBias", set_cfg_generic_token},

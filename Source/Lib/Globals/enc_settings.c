@@ -1124,6 +1124,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: texture-energy-bias must be between 0.667 and 1.5\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (!(config->satd_bias >= 0.0 && config->satd_bias <= 16.0) &&
+        config->satd_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: satd-bias must be between 0.0 and 16.0\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
 
     if (config->tx_bias > 3) {
         SVT_ERROR("Instance %u: TX bias must be between 0 and 3\n", channel_number + 1);
@@ -1432,6 +1437,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->texture_ac_bias                   = DEFAULT;
     config_ptr->lineart_energy_bias               = DEFAULT;
     config_ptr->texture_energy_bias               = DEFAULT;
+    config_ptr->satd_bias                         = DEFAULT;
     config_ptr->tx_bias                           = 0;
     config_ptr->low_q_taper                       = 0;
     config_ptr->noise_level_thr                   = -1;
@@ -3077,6 +3083,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"texture-ac-bias", &config_struct->texture_ac_bias},
         {"lineart-energy-bias", &config_struct->lineart_energy_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},
+        {"satd-bias", &config_struct->satd_bias},
         {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias}
     };
     const size_t double_opts_size = sizeof(double_opts) / sizeof(double_opts[0]);
