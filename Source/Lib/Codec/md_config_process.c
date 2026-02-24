@@ -264,7 +264,9 @@ static void svt_av1_qm_init(PictureControlSet *pcs) {
 
     int psy_bias_qm_bias = 0;
     if (pcs->scs->static_config.psy_bias_qm_bias) {
-        if (pcs->coeff_lvl == VLOW_LVL)
+        if (pcs->ppcs->temporal_layer_index >= pcs->ppcs->hierarchical_levels)
+            psy_bias_qm_bias = 2;
+        else if (pcs->ppcs->temporal_layer_index + 1 >= pcs->ppcs->hierarchical_levels)
             psy_bias_qm_bias = 1;
     }
 
