@@ -4179,8 +4179,12 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.texture_energy_bias == DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 5.0)
             scs->static_config.texture_energy_bias = 1.10;
-        else if (scs->static_config.texture_psy_bias >= 3.0)
-            scs->static_config.texture_energy_bias = 1.02;
+        else if (scs->static_config.texture_psy_bias >= 3.0) {
+            if (scs->static_config.high_fidelity_encode_psy_bias)
+                scs->static_config.texture_energy_bias = 1.04;
+            else
+                scs->static_config.texture_energy_bias = 1.02;
+        }
         else
             scs->static_config.texture_energy_bias = 1.00;
     }
@@ -4219,7 +4223,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         if (scs->static_config.lineart_psy_bias >= 6.0)
             scs->static_config.dlf_sharpness = 7;
         else
-            scs->static_config.dlf_sharpness = CLIP3(0, 7, scs->static_config.sharpness);
+            scs->static_config.dlf_sharpness = 1;
     }
     svt_av1_verify_dlf_bias_max_min_dlf(&scs->static_config, &scs->static_config);
 

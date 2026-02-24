@@ -1472,7 +1472,7 @@ ConfigEntry config_entry_psy[] = {
      set_cfg_generic_token},
     {SINGLE_INPUT,
      DLF_SHARPNESS_TOKEN,
-     "[PSY] DLF Sharpness, default is `--sharpness`",
+     "[PSY] DLF Sharpness, default is 1 [0-7]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
      DLF_BIAS_MAX_DLF_TOKEN,
