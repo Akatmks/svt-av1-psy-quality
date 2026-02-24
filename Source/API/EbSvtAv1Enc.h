@@ -1245,14 +1245,14 @@ typedef struct EbSvtAv1EncConfiguration {
     /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0
-     * Max value is 0.99
+     * Max value is 1 (Exclusive)
      * 0.0: disabled
      */
     double balancing_luminance_lambda_bias;
     /**
      * @brief Enable balancing texture lambda bias
      * Min value is 0.0
-     * Max value is 0.99
+     * Max value is 1 (Exclusive)
      * 0.0: disabled
      */
     double balancing_texture_lambda_bias;

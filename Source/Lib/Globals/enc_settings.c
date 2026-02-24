@@ -1231,14 +1231,14 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias <= 0.990001) &&
+    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias < 1) &&
         config->balancing_luminance_lambda_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.99\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.999\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->balancing_texture_lambda_bias >= 0.0 && config->balancing_texture_lambda_bias <= 0.990001) &&
+    if (!(config->balancing_texture_lambda_bias >= 0.0 && config->balancing_texture_lambda_bias < 1) &&
         config->balancing_texture_lambda_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-texture-lambda-bias must be between 0.0 and 0.99\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-texture-lambda-bias must be between 0.0 and 0.999\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 

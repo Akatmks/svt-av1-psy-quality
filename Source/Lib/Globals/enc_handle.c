@@ -4043,7 +4043,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.balancing_luminance_lambda_bias == DEFAULT) {
         if (scs->static_config.balancing_q_bias) {
             if (scs->static_config.high_fidelity_encode_psy_bias)
-                scs->static_config.balancing_luminance_lambda_bias = 0.5;
+                scs->static_config.balancing_luminance_lambda_bias = 0.9;
             else
                 scs->static_config.balancing_luminance_lambda_bias = 0.0;
         }
@@ -4142,14 +4142,24 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.ac_bias == DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 5.0)
             scs->static_config.ac_bias = 3.0;
+        else if (scs->static_config.texture_psy_bias >= 1.0) {
+            if (scs->static_config.high_fidelity_encode_psy_bias)
+                scs->static_config.ac_bias = 1.5;
+            else
+                scs->static_config.ac_bias = 1.0;
+        }
         else
             scs->static_config.ac_bias = 1.0;
     }
     if (scs->static_config.texture_ac_bias == DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 5.0)
             scs->static_config.texture_ac_bias = 8.0;
-        else if (scs->static_config.texture_psy_bias >= 4.0)
-            scs->static_config.texture_ac_bias = 3.0;
+        else if (scs->static_config.texture_psy_bias >= 4.0) {
+            if (scs->static_config.high_fidelity_encode_psy_bias)
+                scs->static_config.texture_ac_bias = 4.5;
+            else
+                scs->static_config.texture_ac_bias = 3.0;
+        }
         else
             scs->static_config.texture_ac_bias = scs->static_config.ac_bias;
     }

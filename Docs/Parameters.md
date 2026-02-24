@@ -87,8 +87,8 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **BalancingQBias**               | --balancing-q-bias          | [0-1]                          | 0           | Enable balancing Q bias. Balancing Q bias biases the TPL system on both per frame and per Super Block level for better detail retention.             |
 | **BalancingLuminanceQBias**      | --balancing-luminance-q-bias | [0.0-25.0]                    | 0.0         | Enable balancing luminance Q bias. Boost Super Block with low luminance via beta. Recommended to be used with `--balancing-q-bias` but can be used without. [0: disabled, 8.0: default with `--balancing-q-bias 1`] |
 | **BalancingNoiseLevelQBias**     | --balancing-noise-level-q-bias | [0.5-2.0]                   | 1.0         | Boost a frame's base qindex when noise level is below the threshold. Can be used without `--balancing-q-bias`. [1.0: disabled, >1: boost frames with low noise, <1: dampen frames with low noise, 0.91-1.10: recommended range] |
-| **BalancingLuminanceLambdaBias** | --balancing-luminance-lambda-bias | [0.0-0.99]               | 0.0         | Enable balancing luminance lambda bias. Bias lambda in mode decision in super block with low luminance. [0: default encoder behaviour] |
-| **BalancingTextureLambdaBias**   | --balancing-texture-lambda-bias | [0.0-0.99]                 | 0.0         | Enable balancing texture lambda bias. Bias lambda in low variance regions. [0: default encoder behaviour]     |
+| **BalancingLuminanceLambdaBias** | --balancing-luminance-lambda-bias | [0.0-0.999]              | 0.0         | Enable balancing luminance lambda bias. Bias lambda in mode decision in super block with low luminance. [0: default encoder behaviour] |
+| **BalancingTextureLambdaBias**   | --balancing-texture-lambda-bias | [0.0-0.999]                | 0.0         | Enable balancing texture lambda bias. Bias lambda in low variance regions. [0: default encoder behaviour]     |
 | **BalancingR0BasedLayer**        | --balancing-r0-based-layer  | [-5-0]                         | -3          | Frames with temporal layer lower than or equal to hierarchical levels + `--balancing-r0-based-layer` will use r0-based QPS QPM. This affects a wide range of features and can be used without `--balancing-q-bias`. It's recommended not to change this parameter when using `--balancing-q-bias 1` [-3: default encoder behaviour, 0: default with `--balancing-q-bias 1`] |
 | **BalancingR0DampeningLayer**    | --balancing-r0-dampening-layer | [-5-1]                      | 1           | Dampen r0-based boosting in frames with temporal layer higher than or equal to hierarchical levels + `--balancing-r0-dampening-layer`. This affects a wide range of features and can be used without `--balancing-q-bias`. [1: disabled, -2: default with `--balancing-q-bias 1`] |
 | **BalancingTPLIntraModeBetaBias** | --balancing-tpl-intra-mode-beta-bias | [0-1]                | 1           | Boost a Super Block if TPL search result favours intra instead of inter prediction modes. Requires `--balancing-q-bias 1`. [0: disabled [Default]] |
@@ -162,7 +162,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [cdef] chroma cdef distortion bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
 | [rest] `--psy-bias-disable-sgrproj 1` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 
-To use `--lineart-psy-bias`, select a level based on how much effort you want to spend on lineart retention. Specifically:  
+<ins>To use `--lineart-psy-bias`</ins>, select a level based on how much effort you want to spend on lineart retention. Specifically:  
 * `--lineart-psy-bias 3` is generally good for all sources, especially sources without weak lineart and easier to handle.  
 * `--lineart-psy-bias 4` puts a little bit more focus on weak lineart retention than `--lineart-psy-bias 3`.  
 * `--lineart-psy-bias 5` and above is optimised for weak lineart retention. Some features here trade overall efficiency for better weak lineart retention, such as variance skip taper enabled at `--lineart-psy-bias 6` and variance 32x32 blk size taper enabled at `--lineart-psy-bias 7`.  
@@ -213,7 +213,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 
-To use `--texture-psy-bias`, select a level based on how much effort you want to spend on texture retention. Specifically:  
+<ins>To use `--texture-psy-bias`</ins>, select a level based on how much effort you want to spend on texture retention. Specifically:  
 * `--texture-psy-bias 2` is fine to use on sources with little texture.  
 * `--texture-psy-bias 3` puts a little bit of focus on texture, and can be used on sources with occasional texture.  
 * `--texture-psy-bias 4` is suitable for sources with detailed texture. At this level, it starts to harm especially weak lineart in clean sources a little bit, but should still generally be fine for most sources.  
@@ -240,10 +240,11 @@ Based on these base threshold, internally, the encoder convert this value severa
 
 * `--hierarchical-levels`: Default changed from `5` to `3`. Can be overridden.  
 * `--balancing-luminance-q-bias`: Add an additional `4.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
-* `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.5`. Can be overridden.  
+* `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`. Change it from applying only in frames of higher temporals level to applying to frames of all temporal levels including base frames.  
 * `--psy-bias-disable-me-8x8`: Revert `--lineart-psy-bias [>= 2]` settings back to `0`. Can be overridden.  
+* `--ac-bias` and `--texture-ac-bias`: Boost `--texture-psy-bias`'s default for `--ac-bias` and `--texture-ac-bias` by 1.5 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--ac-bias` or `--texture-ac-bias` value.  
 * `--satd-bias`: Default changed from `0.00` to `1.00`. Can be overridden.  
 * `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
 * `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
@@ -252,7 +253,7 @@ Based on these base threshold, internally, the encoder convert this value severa
 
 Additionally, `--balancing-noise-level-q-bias` such as `--balancing-noise-level-q-bias 1.10` may be beneficial for high fidelity encodes as well.  
 
-Although `--high-fidelity-encode-psy-bias` is enabled by default at `--crf [<= 16.00]`, some of these features can be beneficial to numerically higher `--crf` such as `--crf 24.00`, as well and you can try to apply some of these features manually when doing a smaller encode as well.  
+Although `--high-fidelity-encode-psy-bias` is enabled by default at `--crf [<= 16.00]`, some of these features can be beneficial to numerically higher `--crf` such as `--crf 24.00` as well, and you can try to apply some of these features manually.  
 
 ## Rate Control Options
 
