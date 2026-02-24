@@ -1401,7 +1401,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *cand_bf, PictureControlSet *pcs
             chroma_fast_distortion += (uint32_t)spatial_full_dist_type_fun(input_pic->buffer_cr,
                                                                            input_cr_origin_in_index,
                                                                            input_pic->stride_cb,
-                                                                           cand_bf->pred->buffer_cr,
+                                                                           cand_bf->pred->buffer_cb,
                                                                            (int32_t)cu_chroma_origin_index,
                                                                            pred->stride_cr,
                                                                            ctx->blk_geom->bwidth_uv,
