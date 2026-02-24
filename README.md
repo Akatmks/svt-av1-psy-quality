@@ -5,5 +5,3 @@ This repository provides optimised Windows builds for all your favourite SVT-AV1
 Head to [releases](../../releases) for the builds we're offering.  
 
 We're also actively looking for ways to improve encoding quality. We include these new features from ourselves into the builds as well. However, we don't intend this repository to be a standalone „fork“. Once we believe a new feature is working, we intend to create pull requests to upstream forks and get it merged.  
-
-
