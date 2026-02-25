@@ -242,6 +242,7 @@
 #define PSY_BIAS_INTER_MODE_BIAS_TOKEN "--psy-bias-inter-mode-bias"
 #define PSY_BIAS_QM_BIAS_TOKEN "--psy-bias-qm-bias"
 #define PSY_BIAS_CHROMA_Q_BIAS_TOKEN "--psy-bias-chroma-q-bias"
+#define HIGH_QUALITY_ENCODE_PSY_BIAS "--high-quality-encode-psy-bias"
 #define HIGH_FIDELITY_ENCODE_PSY_BIAS "--high-fidelity-encode-psy-bias"
 #define DLF_BIAS_TOKEN "--dlf-bias"
 #define DLF_SHARPNESS_TOKEN "--dlf-sharpness"
@@ -1463,6 +1464,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Bias chroma q decision. [-2, 0.001-1.0]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     HIGH_QUALITY_ENCODE_PSY_BIAS,
+     "[PSY] Bias various features for high quality encoding. [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      HIGH_FIDELITY_ENCODE_PSY_BIAS,
      "[PSY] Bias various features for high fidelity encoding. [0-1]",
      set_cfg_generic_token},
@@ -1818,6 +1823,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, PSY_BIAS_QM_BIAS_TOKEN, "PsyBiasQMBias", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_CHROMA_Q_BIAS_TOKEN, "PsyBiasChromaQBias", set_cfg_generic_token},
 
+    {SINGLE_INPUT, HIGH_QUALITY_ENCODE_PSY_BIAS, "HighQualityEncodePsyBias", set_cfg_generic_token},
     {SINGLE_INPUT, HIGH_FIDELITY_ENCODE_PSY_BIAS, "HighFidelityEncodePsyBias", set_cfg_generic_token},
 
     // DLF Bias

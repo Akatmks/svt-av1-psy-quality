@@ -4046,7 +4046,7 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
                                    pcs->ppcs->slice_type == I_SLICE;
     uint8_t       psy_bias_cand_elimination = 0;
     if (pcs->scs->static_config.texture_psy_bias >= 3.0) {
-        if (pcs->scs->static_config.high_fidelity_encode_psy_bias)
+        if (pcs->scs->static_config.high_quality_encode_psy_bias)
                   psy_bias_cand_elimination = 1;
         else
                   psy_bias_cand_elimination = !is_base_layer1;

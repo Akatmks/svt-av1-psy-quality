@@ -4036,6 +4036,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
             if (scs->static_config.high_fidelity_encode_psy_bias)
                 scs->static_config.balancing_luminance_q_bias += 40;
+            else if (scs->static_config.high_quality_encode_psy_bias)
+                scs->static_config.balancing_luminance_q_bias += 20;
         }
         else
             scs->static_config.balancing_luminance_q_bias     = 0;
@@ -4078,6 +4080,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.psy_bias_chroma_q_bias == DEFAULT) {
         if (scs->static_config.high_fidelity_encode_psy_bias)
             scs->static_config.psy_bias_chroma_q_bias = 0.6;
+        else if (scs->static_config.high_quality_encode_psy_bias)
+            scs->static_config.psy_bias_chroma_q_bias = 0.8;
         else
             scs->static_config.psy_bias_chroma_q_bias = -2;
     }
@@ -4171,7 +4175,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.texture_ac_bias = scs->static_config.ac_bias;
     }
     if (scs->static_config.lineart_energy_bias == DEFAULT) {
-        if (scs->static_config.high_fidelity_encode_psy_bias)
+        if (scs->static_config.high_quality_encode_psy_bias)
             scs->static_config.lineart_energy_bias = 0.98;
         else
             scs->static_config.lineart_energy_bias = 1.00;
@@ -4799,7 +4803,15 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_qm_bias = config_struct->psy_bias_qm_bias;
     scs->static_config.psy_bias_chroma_q_bias = config_struct->psy_bias_chroma_q_bias;
 
+    scs->static_config.high_quality_encode_psy_bias = config_struct->high_quality_encode_psy_bias;
     scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;
+    if (scs->static_config.high_quality_encode_psy_bias == DEFAULT) {
+        if ((scs->static_config.lineart_psy_bias >= 1.0 || scs->static_config.texture_psy_bias >= 1.0) &&
+            (scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 96) // --crf 24.00
+            scs->static_config.high_quality_encode_psy_bias = 1.0;
+        else
+            scs->static_config.high_quality_encode_psy_bias = 0.0;
+    }
     if (scs->static_config.high_fidelity_encode_psy_bias == DEFAULT) {
         if ((scs->static_config.lineart_psy_bias >= 1.0 || scs->static_config.texture_psy_bias >= 1.0) &&
             (scs->static_config.qp << 2) + scs->static_config.extended_crf_qindex_offset <= 64) // --crf 16.00
@@ -4807,6 +4819,8 @@ static void copy_api_from_app(
         else
             scs->static_config.high_fidelity_encode_psy_bias = 0.0;
     }
+    if (scs->static_config.high_fidelity_encode_psy_bias)
+        scs->static_config.high_quality_encode_psy_bias = 1.0;
 
     scs->static_config.tune = config_struct->tune;
     scs->static_config.hierarchical_levels = ((EbSvtAv1EncConfiguration*)config_struct)->hierarchical_levels;

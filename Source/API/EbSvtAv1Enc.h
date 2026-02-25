@@ -1161,6 +1161,12 @@ typedef struct EbSvtAv1EncConfiguration {
     double psy_bias_chroma_q_bias;
 
     /**
+     * @brief Bias various features for high quality encoding.
+     * Min value is 0
+     * Max value is 1
+     */
+    double high_quality_encode_psy_bias;
+    /**
      * @brief Bias various features for high fidelity encoding.
      * Min value is 0
      * Max value is 1
@@ -1343,7 +1349,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 11 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 12 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

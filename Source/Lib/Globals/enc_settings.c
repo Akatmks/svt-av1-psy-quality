@@ -54,7 +54,7 @@ EbErrorType svt_av1_verify_dlf_bias_max_min_dlf(EbSvtAv1EncConfiguration *source
         if ((source_config->texture_psy_bias >= 3.0 && source_config->texture_psy_bias < 5.0) ||
             (source_config->texture_psy_bias >= 7.0))
             target_config->dlf_bias_min_dlf[0] = 0;
-        else if (source_config->high_fidelity_encode_psy_bias)
+        else if (source_config->high_quality_encode_psy_bias)
             target_config->dlf_bias_min_dlf[0] = 0;
         else
             target_config->dlf_bias_min_dlf[0] = 2;
@@ -1191,6 +1191,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
+    if (!(config->high_quality_encode_psy_bias >= 0.0 && config->high_quality_encode_psy_bias <= 1.0) &&
+        config->high_quality_encode_psy_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: high-quality-encode-psy-bias must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
     if (!(config->high_fidelity_encode_psy_bias >= 0.0 && config->high_fidelity_encode_psy_bias <= 1.0) &&
         config->high_fidelity_encode_psy_bias != DEFAULT) {
         SVT_ERROR("Instance %u: high-fidelity-encode-psy-bias must be between 0 and 1\n", channel_number + 1);
@@ -1460,7 +1465,8 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_mds0_intra_inter_mode_bias = UINT8_DEFAULT;
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
     config_ptr->psy_bias_qm_bias                  = UINT8_DEFAULT;
-    config_ptr->psy_bias_chroma_q_bias               = DEFAULT;
+    config_ptr->psy_bias_chroma_q_bias            = DEFAULT;
+    config_ptr->high_quality_encode_psy_bias      = DEFAULT;
     config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
@@ -1710,6 +1716,9 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
         if (config->high_fidelity_encode_psy_bias) {
             SVT_INFO("SVT [config]: high fidelity encode PSY bias \t\t\t\t\t: on\n");
         }
+        else if (config->high_quality_encode_psy_bias) {
+            SVT_INFO("SVT [config]: high quality encode PSY bias \t\t\t\t\t: on\n");
+        }
 
         if (config->lineart_psy_bias_easter_egg == 1) {
             SVT_INFO("SVT [config]: lineart bias ~ Kumiko version ~ / variance base / common thr \t: %.0f / %d / %d\n",
@@ -1791,13 +1800,16 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                  config->noise_norm_strength);
 
         if (config->ac_bias) {
-            if (config->texture_ac_bias != config->ac_bias || config->lineart_energy_bias != 1.0 || config->texture_energy_bias != 1.0) {
+            if (config->texture_ac_bias != config->ac_bias || config->lineart_energy_bias != 1.0 || config->texture_energy_bias != 1.0 || config->satd_bias) {
                 SVT_INFO("SVT [config]: AC bias - universal / texture bias strength \t\t\t: %.2f / %.2f\n",
                          config->ac_bias,
                          config->texture_ac_bias);
                 SVT_INFO("SVT [config]: AC bias - lineart / texture energy bias strength \t\t: %.2f / %.2f\n",
                          config->lineart_energy_bias,
                          config->texture_energy_bias);
+                if (config->satd_bias)
+                    SVT_INFO("SVT [config]: AC bias - SATD bias strength \t\t\t\t\t: %.2f\n",
+                             config->satd_bias);
                 if (config->tx_bias)
                     SVT_INFO("SVT [config]: TX bias \t\t\t\t\t\t\t: %s\n",
                              config->tx_bias == 1
@@ -3091,6 +3103,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"texture-energy-bias", &config_struct->texture_energy_bias},
         {"satd-bias", &config_struct->satd_bias},
         {"psy-bias-chroma-q-bias", &config_struct->psy_bias_chroma_q_bias},
+        {"high-quality-encode-psy-bias", &config_struct->high_quality_encode_psy_bias},
         {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias}
     };
     const size_t double_opts_size = sizeof(double_opts) / sizeof(double_opts[0]);

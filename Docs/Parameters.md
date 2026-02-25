@@ -120,7 +120,8 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
 | **PsyBiasQMBias**                | --psy-bias-qm-bias          | [0-1]                          | 0           | Increase QM level in frames of higher temporal layer                                                          |
 | **PsyBiasChromaQBias**           | --psy-bias-chroma-q-bias    | [-2, 0.001-1.0]                | -2          | Bias chroma q decision. `-2` disables this feature. `1.0` begins chorma qindex decision from the same `--crf` value specified by `--crf`, while values smaller than `1.0` begins chroma qindex decision from a better `--crf` value than the value specified by `--crf`. This feature is unrelated to the `chroma_qindex` bias enabled at `--lineart-psy-bias [>= 2]` or `--texture-psy-bias [>= 4]`. Also enabling this feature disables `chroma_qindex` bias. |
-| **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
+| **HighQualityEncodePsyBias**     | --high-quality-encode-psy-bias | [0-1]                       | 0           | Bias various features for high quality encoding. Check below for more description. [Default to `1` when `--crf [<= 24.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
+| **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. Check below for more description. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 
 ### Noise level threshold
 
@@ -235,28 +236,39 @@ The `--lineart-variance-thr` and `--texture-variance-thr` commandline parameter 
 Note that these commandline parameters are not using raw `pcs->ppcs->variance` value. You can use `pow(2, lineart_variance_thr) - 1` and `pow(2, texture_variance_thr) - 1` to convert commandline value to raw `pcs->ppcs->variance` value. These are displayed in encoder printout as `variance base thr`.  
 Based on these base threshold, internally, the encoder convert this value several times to get the different threshold for different biases and tapers. Commonly anything that's above `"variance base thr" >> 1` is treated as strong lineart, the region between `"variance base thr" >> 1` and `"variance base thr" >> 2` is considered the inbetween area, while anything below `"variance base thr" >> 2` is treated as texture. These two thresholds are also displayed in the encoder printout as `variance common thr`. Specifically when you're using `--lineart-psy-bias -2` to test skip taper, or if you're actually using skip taper in encode with `--lineart-psy-bias [>= 6]`, the actual threshold used in the skip taper decision is lineart's `variance common thr`.  
 
-### `--high-fidelity-encode-psy-bias`
+### `--high-quality-encode-psy-bias` and `--high-fidelity-encode-psy-bias`
 
-`--high-fidelity-encode-psy-bias` is enabled by default with `--crf [<= 16.00]` and either `--lineart-psy-bias` or `--texture-psy-bias`.  
+When either `--lineart-psy-bias` or `--texture-psy-bias` are selected, `--high-quality-encode-psy-bias` is enabled by default with `--crf [<= 24.00]`, and `--high-fidelity-encode-psy-bias` is enabled by default with `--crf [<= 16.00]`.  
+About the difference between high quality and high fidelity encode, let's say we have a region full of texture: The target of high quality encode is to make encode full of texture as well. SVT-AV1's hierarchical structure is very powerful at recovering information from other frames. Sometimes even when the texture is lost in the source, SVT-AV1 can recover the lost information from nearby frames. However, in high fidelity encode, our target has changed. Instead, we want our encode to be exactly the same as the source, retaining all the peaks and grooves of the original texture at every frame. This is the main difference between the two.  
+However, apart from this, both parameters have various features such as boosting darker areas, boosting chroma retention that are suitable for higher quality encodes in general.  
+
+#### `--high-quality-encode-psy-bias` Features
+
+* `--balancing-luminance-q-bias`: Add an additional `2.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
+* `--psy-bias-chroma-q-bias`: Default changed to `0.8`. Can be overridden.  
+* variance cand elimination (`--texture-psy-bias [>= 3]`): Change it from applying only in frames of higher temporals layers to applying to frames of all temporal levels including base frames.  
+* `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
+* `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
+
+##### `--high-fidelity-encode-psy-bias` Features
+
+Setting `--high-fidelity-encode-psy-bias 1` sets `--high-quality-encode-psy-bias 1` as well, and cannot be overridden.  
+In additional to features in `--high-quality-encode-psy-bias 1`:  
 
 * `--hierarchical-levels`: Default changed from `5` to `3`. Can be overridden.  
 * `--balancing-luminance-q-bias`: Add an additional `4.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
 * `--psy-bias-chroma-q-bias`: Default changed to `0.6`. Can be overridden.  
 * `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
-* variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`. Change it from applying only in frames of higher temporals level to applying to frames of all temporal levels including base frames.  
+* variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`.  
 * `--psy-bias-disable-me-8x8`: Revert `--lineart-psy-bias [>= 2]` settings back to `0`. Can be overridden.  
 * `--ac-bias` and `--texture-ac-bias`: Boost `--texture-psy-bias`'s default for `--ac-bias` and `--texture-ac-bias` by 1.5 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--ac-bias` or `--texture-ac-bias` value.  
 * `--texture-energy-bias`: Boost `--texture-psy-bias`'s default by 2 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--texture-energy-bias` value.  
 * `--satd-bias`: Default changed from `0.00` to `1.00`. Can be overridden.  
-* `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
-* `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
 * `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
 * `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
-Additionally, `--balancing-noise-level-q-bias` such as `--balancing-noise-level-q-bias 1.10` may be beneficial for high fidelity encodes as well.  
-
-Although `--high-fidelity-encode-psy-bias` is enabled by default at `--crf [<= 16.00]`, some of these features can be beneficial to numerically higher `--crf` such as `--crf 24.00` as well, and you can try to apply some of these features manually.  
+Additionally, `--balancing-noise-level-q-bias` with values such as `1.10` may be beneficial for high fidelity encodes as well.  
 
 ## Rate Control Options
 
