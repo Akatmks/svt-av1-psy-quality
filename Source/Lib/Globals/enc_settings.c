@@ -1185,6 +1185,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: psy-bias-qm-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (!(config->psy_bias_chroma_q_bias > 0.0 && config->psy_bias_chroma_q_bias <= 1.0) &&
+        config->psy_bias_chroma_q_bias != DEFAULT && config->psy_bias_chroma_q_bias != -2.0) {
+        SVT_ERROR("Instance %u: psy-bias-chroma-q-bias must be between 0.001 and 1.0, or should it be disabled, set it to -2\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
 
     if (!(config->high_fidelity_encode_psy_bias >= 0.0 && config->high_fidelity_encode_psy_bias <= 1.0) &&
         config->high_fidelity_encode_psy_bias != DEFAULT) {
@@ -1318,7 +1323,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->target_bit_rate              = 2000513;
     config_ptr->max_bit_rate                 = 0;
     config_ptr->max_qp_allowed               = 63;
-    config_ptr->min_qp_allowed               = 4;
+    config_ptr->min_qp_allowed               = 1;
     config_ptr->enable_adaptive_quantization = 2;
     config_ptr->enc_mode                     = ENC_M4;
     config_ptr->intra_period_length          = -2;
@@ -1455,6 +1460,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_mds0_intra_inter_mode_bias = UINT8_DEFAULT;
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
     config_ptr->psy_bias_qm_bias                  = UINT8_DEFAULT;
+    config_ptr->psy_bias_chroma_q_bias               = DEFAULT;
     config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
     config_ptr->dlf_sharpness                     = UINT8_DEFAULT;
@@ -3084,6 +3090,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"lineart-energy-bias", &config_struct->lineart_energy_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},
         {"satd-bias", &config_struct->satd_bias},
+        {"psy-bias-chroma-q-bias", &config_struct->psy_bias_chroma_q_bias},
         {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias}
     };
     const size_t double_opts_size = sizeof(double_opts) / sizeof(double_opts[0]);

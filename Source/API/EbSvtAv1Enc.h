@@ -466,7 +466,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /* Minimum QP value allowed for rate control use, only applicable when rate
      * control mode is set to 1 or 2. It has to be smaller or equal to maxQpAllowed.
      *
-     * Default is 4. */
+     * Default is 1. */
     uint32_t min_qp_allowed;
 
     // DATARATE CONTROL OPTIONS
@@ -1158,6 +1158,7 @@ typedef struct EbSvtAv1EncConfiguration {
     uint8_t psy_bias_mds0_intra_inter_mode_bias;
     uint8_t psy_bias_inter_mode_bias;
     uint8_t psy_bias_qm_bias;
+    double psy_bias_chroma_q_bias;
 
     /**
      * @brief Bias various features for high fidelity encoding.
@@ -1342,7 +1343,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 10 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 11 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 

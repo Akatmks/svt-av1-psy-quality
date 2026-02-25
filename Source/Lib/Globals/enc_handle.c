@@ -4075,6 +4075,13 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.enable_variance_boost = 1;
     }
 
+    if (scs->static_config.psy_bias_chroma_q_bias == DEFAULT) {
+        if (scs->static_config.high_fidelity_encode_psy_bias)
+            scs->static_config.psy_bias_chroma_q_bias = 0.6;
+        else
+            scs->static_config.psy_bias_chroma_q_bias = -2;
+    }
+
     // `-psy-bias`s MD
     if (scs->static_config.psy_bias_mds0_sad == UINT8_DEFAULT) {
         if (scs->static_config.texture_psy_bias >= 6.0)
@@ -4786,6 +4793,7 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_mds0_intra_inter_mode_bias = config_struct->psy_bias_mds0_intra_inter_mode_bias;
     scs->static_config.psy_bias_inter_mode_bias = config_struct->psy_bias_inter_mode_bias;
     scs->static_config.psy_bias_qm_bias = config_struct->psy_bias_qm_bias;
+    scs->static_config.psy_bias_chroma_q_bias = config_struct->psy_bias_chroma_q_bias;
 
     scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;
     if (scs->static_config.high_fidelity_encode_psy_bias == DEFAULT) {

@@ -102,7 +102,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **TextureAcBias**                | --texture-ac-bias           | [0.0-64.0]                     | same as `--ac-bias` | `--ac-bias` strength in low variance regions. Application based on `--texture-variance-thr`, and protection based on `--lineart-variance-thr`. |
 | **LineartEnergyBias**            | --lineart-energy-bias       | [0.667-1.5]                    | 1.0         | Prefer higher energy even if the encode will have higher energy than the source in high variance regions.     |
 | **TextureEnergyBias**            | --texture-energy-bias       | [0.667-1.5]                    | 1.0         | Prefer higher energy even if the encode will have higher energy than the source in low variance regions. Application based on `--texture-variance-thr`, and protection based on `--lineart-variance-thr`. |
-| **SATDBias**                     | --satd-bias                 | [0.0-16.                       | 0.0         | Add SATD calculation to distortion calculation.                                                               |
+| **SATDBias**                     | --satd-bias                 | [0.0-16.0]                     | 0.0         | Add SATD calculation to distortion calculation.                                                               |
 | **TxBias**                       | --tx-bias                   | [0-3]                          | 0           | Transform size/type bias mode [0: disabled, 1: full, 2: transform size only, 3: interpolation filter only]    |
 | **HBDMDS**                       | --hbd-mds                   | [0-3]                          | 0           | Activation of high bit depth mode decision (0: default behavior, 1: full 10b MD, 2: hybrid 8/10b MD, 3: full 8b MD) |
 | **SharpTX**                      | --sharp-tx                  | [0-1]                          | 1           | Activation of sharp transform optimizations for higher fidelity encoding (cleaner output with slightly higher chances of artifacting) |
@@ -119,6 +119,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasmds0IntraInterModeBias** | --psy-bias-mds0-intra-inter-mode-bias | [0-1]               | 0           | Bias towards intra mode in base layers, and against intra mode in non base layers                             |
 | **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
 | **PsyBiasQMBias**                | --psy-bias-qm-bias          | [0-1]                          | 0           | Increase QM level in frames of higher temporal layer                                                          |
+| **PsyBiasChromaQBias**           | --psy-bias-chroma-q-bias    | [-2, 0.001-1.0]                | -2          | Bias chroma q decision. `-2` disables this feature. `1.0` begins chorma qindex decision from the same `--crf` value specified by `--crf`, while values smaller than `1.0` begins chroma qindex decision from a better `--crf` value than the value specified by `--crf`. This feature is unrelated to the `chroma_qindex` bias enabled at `--lineart-psy-bias [>= 2]` or `--texture-psy-bias [>= 4]`. Also enabling this feature disables `chroma_qindex` bias. |
 | **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 
 ### Noise level threshold
@@ -240,6 +241,7 @@ Based on these base threshold, internally, the encoder convert this value severa
 
 * `--hierarchical-levels`: Default changed from `5` to `3`. Can be overridden.  
 * `--balancing-luminance-q-bias`: Add an additional `4.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
+* `--psy-bias-chroma-q-bias`: Default changed to `0.6`. Can be overridden.  
 * `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`. Change it from applying only in frames of higher temporals level to applying to frames of all temporal levels including base frames.  
