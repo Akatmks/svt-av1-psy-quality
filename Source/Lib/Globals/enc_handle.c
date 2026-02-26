@@ -5809,8 +5809,10 @@ EB_API void svt_av1_print_version(void) {
     SVT_INFO("-------------------------------------------\n");
     SVT_INFO("SVT [version]: SVT-AV1-PSY [5fish:main] %s\n", SVT_AV1_CVS_VERSION);
     const char *compiler =
-#if defined(__clang__)
+#if defined(__clang__) && defined(__apple_build_version__)
     __VERSION__
+#elif defined(__clang__)
+    "Clang " CONVERT_TO_STR_COMPILE_TIME(__clang_major__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_minor__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_patchlevel__)
 #elif defined(__GNUC__)
     "GCC " __VERSION__
 #elif defined( _MSC_VER ) && (_MSC_VER >= 1930)
@@ -5827,11 +5829,12 @@ EB_API void svt_av1_print_version(void) {
     "unknown compiler"
 #endif
     ;
-    SVT_INFO("SVT [build]  : %s %zu bit / %s %s\n", compiler,  sizeof(void*) * 8,
+#if !REPRODUCIBLE_BUILDS
+    SVT_INFO("SVT [build]  : %s %zu bit / %s %s\n", compiler, sizeof(void*) * 8,
              __DATE__, __TIME__);
-// #if !REPRODUCIBLE_BUILDS
-//     SVT_INFO("LIB Build date: %s %s\n", __DATE__, __TIME__);
-// #endif
+#else
+    SVT_INFO("SVT [build]  : %s %zu bit\n", compiler, sizeof(void*) * 8);
+#endif
     SVT_INFO("-------------------------------------------\n");
 }
 
