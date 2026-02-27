@@ -129,7 +129,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, EbColor
                                                EncMode enc_mode, uint16_t max_block_cnt, uint32_t encoder_bit_depth,
                                                EbFifo *mode_decision_configuration_input_fifo_ptr,
                                                EbFifo *mode_decision_output_fifo_ptr, uint8_t enable_hbd_mode_decision,
-                                               uint8_t cfg_palette, uint8_t seq_qp_mod, double lineart_psy_bias) {
+                                               uint8_t cfg_palette, uint8_t seq_qp_mod, double lineart_psy_bias, double high_quality_encode_psy_bias) {
     uint32_t buffer_index;
     uint32_t cand_index;
 
@@ -154,7 +154,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, EbColor
         // min QP is 1 b/c 0 is lossless and is not supported
         for (uint8_t qp = 1; qp <= MAX_QP_VALUE; qp++) {
             uint8_t nic_level         = svt_aom_get_nic_level(enc_mode, is_base, qp, seq_qp_mod);
-            uint8_t nic_scaling_level = svt_aom_set_nic_controls(NULL, nic_level);
+            uint8_t nic_scaling_level = svt_aom_set_nic_controls(NULL, nic_level, high_quality_encode_psy_bias);
             min_nic_scaling_level     = MIN(min_nic_scaling_level, nic_scaling_level);
         }
     }

@@ -246,6 +246,7 @@ However, apart from this, both parameters have various features such as boosting
 
 * `--balancing-luminance-q-bias`: Add an additional `2.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
 * `--psy-bias-chroma-q-bias`: Default changed to `0.8`. Can be overridden.  
+* disable `bypass_md_stage_2` in `--preset 2` and `1`.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Change it from applying only in frames of higher temporals layers to applying to frames of all temporal levels including base frames.  
 * `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
 * `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  

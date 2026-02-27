@@ -4453,10 +4453,13 @@ uint8_t svt_aom_get_nic_level(EncMode enc_mode, uint8_t is_base, uint32_t qp, ui
 * When called at memory allocation, there is no context (it is passed as NULL) so the signals
 * are not set.
 */
-uint8_t svt_aom_set_nic_controls(ModeDecisionContext *ctx, uint8_t nic_level) {
+uint8_t svt_aom_set_nic_controls(ModeDecisionContext *ctx, uint8_t nic_level, double high_quality_encode_psy_bias) {
     NicPruningCtrls *nic_pruning_ctrls = ctx ? &ctx->nic_ctrls.pruning_ctrls : NULL;
     uint8_t          nic_scaling_level = 0;
     uint8_t          md_staging_mode   = MD_STAGING_MODE_0;
+    uint8_t          psy_bias_disable_bypass_md_stage_2 = 0;
+    if (high_quality_encode_psy_bias)
+        psy_bias_disable_bypass_md_stage_2 = 1;
 
     switch (nic_level) {
     case 0: // MAX NIC scaling; no pruning
@@ -4854,7 +4857,10 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext *ctx, uint8_t nic_level) {
             nic_pruning_ctrls->mds3_q_weight          = 3;
             nic_pruning_ctrls->merge_inter_cands_mult = (uint8_t)~0;
         }
-        md_staging_mode = MD_STAGING_MODE_1;
+        if (psy_bias_disable_bypass_md_stage_2)
+            md_staging_mode = MD_STAGING_MODE_2;
+        else
+            md_staging_mode = MD_STAGING_MODE_1;
         break;
     case 12:
         // NIC scaling level
@@ -7803,7 +7809,7 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
     uint8_t                  ref_skip_perc = pcs->ref_skip_percentage;
     const bool               rtc_tune = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
     svt_aom_set_nsq_search_ctrls(pcs, ctx, pcs->nsq_search_level, input_resolution);
-    svt_aom_set_nic_controls(ctx, ctx->pd_pass == PD_PASS_0 ? 20 : pcs->nic_level);
+    svt_aom_set_nic_controls(ctx, ctx->pd_pass == PD_PASS_0 ? 20 : pcs->nic_level, scs->static_config.high_quality_encode_psy_bias);
     set_cand_reduction_ctrls(pcs,
                              ctx,
                              pd_pass == PD_PASS_0 ? 0 : pcs->cand_reduction_level,
