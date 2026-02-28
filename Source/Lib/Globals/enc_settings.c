@@ -1186,8 +1186,8 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
     if (!(config->psy_bias_chroma_q_bias > 0.0 && config->psy_bias_chroma_q_bias <= 1.0) &&
-        config->psy_bias_chroma_q_bias != DEFAULT && config->psy_bias_chroma_q_bias != -2.0) {
-        SVT_ERROR("Instance %u: psy-bias-chroma-q-bias must be between 0.001 and 1.0, or should it be disabled, set it to -2\n", channel_number + 1);
+        config->psy_bias_chroma_q_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-chroma-q-bias must be between 0.001 and 1.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 

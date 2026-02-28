@@ -2102,7 +2102,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
 
     const double effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
     const double effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
-    const double effective_satd_bias = get_effective_satd_bias(pcs, ctx);
+    // const double effective_satd_bias = get_effective_satd_bias(pcs, ctx);
     const uint8_t tx_depth = cand_bf->cand->tx_depth;
     const Bool    is_inter = (is_inter_mode(cand_bf->cand->pred_mode) || cand_bf->cand->use_intrabc) ? TRUE : FALSE;
     const int     tu_count = tx_depth ? 1 : ctx->blk_geom->txb_count[cand_bf->cand->tx_depth]; //NM: 128x128 exeption

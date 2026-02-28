@@ -3541,13 +3541,10 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
 
                     int32_t chroma_qindex = frm_hdr->quantization_params.base_q_idx;
 
-                    uint8_t psy_bias_chroma_q_bias_applied = FALSE;
-                    if (scs->static_config.psy_bias_chroma_q_bias >= 0) {
+                    if (scs->static_config.psy_bias_chroma_q_bias < 1.0) {
                         if (pcs->ppcs->qp_on_the_fly != TRUE) {
                             if (scs->enable_qp_scaling_flag) {
                                 if (pcs->ppcs->tpl_ctrls.enable) {
-                                    psy_bias_chroma_q_bias_applied = TRUE;
-
                                     chroma_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex);
 
                                     chroma_qindex = svt_av1_get_q_index_from_qstep_ratio(chroma_qindex,
@@ -3556,8 +3553,6 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
 
                                     chroma_qindex = crf_qindex_calc(pcs, rc, chroma_qindex);
                                 } else { // if CQP
-                                    psy_bias_chroma_q_bias_applied = TRUE;
-
                                     chroma_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex);
 
                                     chroma_qindex = svt_av1_get_q_index_from_qstep_ratio(chroma_qindex,
@@ -3576,32 +3571,30 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                         chroma_qindex += scs->static_config.chroma_qindex_offsets[pcs->temporal_layer_index];
                     }
 
-                    if (!psy_bias_chroma_q_bias_applied) {
-                        if (scs->static_config.lineart_psy_bias >= 2.0 || scs->static_config.texture_psy_bias >= 4.0)
-                            chroma_qindex -= chroma_qindex >> 2;
+                    if (scs->static_config.lineart_psy_bias >= 2.0 || scs->static_config.texture_psy_bias >= 4.0)
+                        chroma_qindex -= chroma_qindex >> 2;
 
-                        uint8_t chroma_qindex_adjustment = chroma_qindex;
-                        switch (scs->static_config.tune) {
-                            case 2:
-                                // Chroma boost function - ramp down for higher qindices
-                                chroma_qindex_adjustment = MAX(0, chroma_qindex_adjustment - 48);
-                                chroma_qindex -= CLIP3(0, 16, (int32_t)rint(pow(chroma_qindex_adjustment, 1.4) / 9.0));
-                                break;
-                            case 3:
-                                chroma_qindex += (int32_t)-rint(chroma_qindex_adjustment / 8.0); // Chroma boost to fix saturation issues
-                                break;
-                            case 4:
-                                // Constant chroma boost with gradual ramp-down for very high qindex levels
-                                chroma_qindex -= CLIP3(0, 16, (chroma_qindex_adjustment / 2) - 14);
-                                break;
-                            default:
-                                break;
-                        }
+                    uint8_t chroma_qindex_adjustment = chroma_qindex;
+                    switch (scs->static_config.tune) {
+                        case 2:
+                            // Chroma boost function - ramp down for higher qindices
+                            chroma_qindex_adjustment = MAX(0, chroma_qindex_adjustment - 48);
+                            chroma_qindex -= CLIP3(0, 16, (int32_t)rint(pow(chroma_qindex_adjustment, 1.4) / 9.0));
+                            break;
+                        case 3:
+                            chroma_qindex += (int32_t)-rint(chroma_qindex_adjustment / 8.0); // Chroma boost to fix saturation issues
+                            break;
+                        case 4:
+                            // Constant chroma boost with gradual ramp-down for very high qindex levels
+                            chroma_qindex -= CLIP3(0, 16, (chroma_qindex_adjustment / 2) - 14);
+                            break;
+                        default:
+                            break;
+                    }
 
-                        // Boost chroma on wide color (BT.2020) primary with ramp down
-                        if (scs->static_config.color_primaries == EB_CICP_CP_BT_2020) {
-                            chroma_qindex -= CLIP3(0, 16, (chroma_qindex_adjustment / 2) - 8);
-                        }
+                    // Boost chroma on wide color (BT.2020) primary with ramp down
+                    if (scs->static_config.color_primaries == EB_CICP_CP_BT_2020) {
+                        chroma_qindex -= CLIP3(0, 16, (chroma_qindex_adjustment / 2) - 8);
                     }
 
                     // chroma_qindex += scs->static_config.extended_crf_qindex_offset;

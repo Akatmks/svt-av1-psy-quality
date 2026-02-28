@@ -119,7 +119,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasmds0IntraInterModeBias** | --psy-bias-mds0-intra-inter-mode-bias | [0-1]               | 0           | Bias towards intra mode in base layers, and against intra mode in non base layers                             |
 | **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
 | **PsyBiasQMBias**                | --psy-bias-qm-bias          | [0-1]                          | 0           | Increase QM level in frames of higher temporal layer                                                          |
-| **PsyBiasChromaQBias**           | --psy-bias-chroma-q-bias    | [-2, 0.001-1.0]                | -2          | Bias chroma q decision. `-2` disables this feature. `1.0` begins chorma qindex decision from the same `--crf` value specified by `--crf`, while values smaller than `1.0` begins chroma qindex decision from a better `--crf` value than the value specified by `--crf`. This feature is unrelated to the `chroma_qindex` bias enabled at `--lineart-psy-bias [>= 2]` or `--texture-psy-bias [>= 4]`. Also enabling this feature disables `chroma_qindex` bias. |
+| **PsyBiasChromaQBias**           | --psy-bias-chroma-q-bias    | [0.001-1.0]                    | 1.0          | Bias chroma q decision. `1.0` disables this feature. Values smaller than `1.0` begins chroma qindex decision from a better `--crf` value than the value specified by `--crf`. This feature is unrelated to the `chroma_qindex` bias enabled at `--lineart-psy-bias [>= 2]` or `--texture-psy-bias [>= 4]` but applied in addition to it. |
 | **HighQualityEncodePsyBias**     | --high-quality-encode-psy-bias | [0-1]                       | 0           | Bias various features for high quality encoding. Check below for more description. [Default to `1` when `--crf [<= 24.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 | **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. Check below for more description. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 
@@ -245,11 +245,12 @@ However, apart from this, both parameters have various features such as boosting
 #### `--high-quality-encode-psy-bias` Features
 
 * `--balancing-luminance-q-bias`: Add an additional `2.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
-* `--psy-bias-chroma-q-bias`: Default changed to `0.8`. Can be overridden.  
 * disable `bypass_md_stage_2` in `--preset 2` and `1`.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Change it from applying only in frames of higher temporals layers to applying to frames of all temporal levels including base frames.  
 * `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
 * `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
+
+Additionally, `--satd-bias 0.5` could potentially encourage the encoder to keep certain type of texture and might be useful.  
 
 ##### `--high-fidelity-encode-psy-bias` Features
 
@@ -258,7 +259,6 @@ In additional to features in `--high-quality-encode-psy-bias 1`:
 
 * `--hierarchical-levels`: Default changed from `5` to `3`. Can be overridden.  
 * `--balancing-luminance-q-bias`: Add an additional `4.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
-* `--psy-bias-chroma-q-bias`: Default changed to `0.6`. Can be overridden.  
 * `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`.  
@@ -269,7 +269,7 @@ In additional to features in `--high-quality-encode-psy-bias 1`:
 * `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
 * `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
-Additionally, `--balancing-noise-level-q-bias` with values such as `1.10` may be beneficial for high fidelity encodes as well.  
+Additionally, `--balancing-noise-level-q-bias 1.10` or `1.15` which can balance the quality between noisy and static scenes could be beneficial. `--psy-bias-chroma-q-bias 0.6` might also be good to use.  
 
 ## Rate Control Options
 

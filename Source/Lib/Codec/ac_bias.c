@@ -287,6 +287,8 @@ double get_psy_bias_effective_energy_bias(PictureControlSet *pcs, ModeDecisionCo
 }
 
 double get_effective_satd_bias(PictureControlSet *pcs, ModeDecisionContext *ctx) {
+    UNUSED(ctx);
+
     uint8_t temporal_layer_index;
     if (!pcs->scs->static_config.balancing_q_bias)
         temporal_layer_index = pcs->ppcs->temporal_layer_index;

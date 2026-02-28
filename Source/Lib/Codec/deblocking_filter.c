@@ -1023,6 +1023,8 @@ static int32_t search_filter_level_dlf_bias(//const Yv12BufferConfig *sd, Av1Com
                                             EbPictureBufferDesc *temp_lf_recon_buffer, PictureControlSet *pcs, int32_t partial_frame,
                                             const int32_t *last_frame_filter_level, double *best_cost_ret, int32_t plane, int32_t dir,
                                             uint8_t max_dlf, uint8_t min_dlf) {
+    UNUSED(last_frame_filter_level);
+
     if (min_dlf == max_dlf)
         return min_dlf;
 

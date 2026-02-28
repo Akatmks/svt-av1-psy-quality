@@ -4077,14 +4077,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.enable_variance_boost = 1;
     }
 
-    if (scs->static_config.psy_bias_chroma_q_bias == DEFAULT) {
-        if (scs->static_config.high_fidelity_encode_psy_bias)
-            scs->static_config.psy_bias_chroma_q_bias = 0.6;
-        else if (scs->static_config.high_quality_encode_psy_bias)
-            scs->static_config.psy_bias_chroma_q_bias = 0.8;
-        else
-            scs->static_config.psy_bias_chroma_q_bias = -2;
-    }
+    if (scs->static_config.psy_bias_chroma_q_bias == DEFAULT)
+        scs->static_config.psy_bias_chroma_q_bias = 1.0;
 
     // `-psy-bias`s MD
     if (scs->static_config.psy_bias_mds0_sad == UINT8_DEFAULT) {

@@ -4353,7 +4353,6 @@ static void perform_tx_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ct
 
     TxSize       tx_size           = ctx->blk_geom->txsize[0];
     const double effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
-    const double effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
 
     if (ctx->mds_subres_step == 2) {
         if (tx_size == TX_64X64)
@@ -5442,7 +5441,6 @@ static void perform_dct_dct_tx_light_pd1(PictureControlSet *pcs, ModeDecisionCon
     EbPictureBufferDesc *input_pic = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
     const Bool           is_inter  = is_inter_mode(cand_bf->cand->pred_mode) ? TRUE : FALSE;
     const double         effective_ac_bias = get_psy_bias_effective_ac_bias(pcs, ctx);
-    const double         effective_energy_bias = get_psy_bias_effective_energy_bias(pcs, ctx);
         
     ctx->three_quad_energy         = 0;
     svt_aom_residual_kernel(input_pic->buffer_y,
