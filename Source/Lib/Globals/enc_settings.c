@@ -1053,8 +1053,9 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if (config->sharpness > 7 || config->sharpness < -7) {
-        SVT_ERROR("Instance %u: Sharpness level must be between -7 and 7\n", channel_number + 1);
+    if ((config->sharpness > 14 || config->sharpness < -14) &&
+        config->sharpness != INT8_DEFAULT) {
+        SVT_ERROR("Instance %u: Sharpness level must be between -14 and 14\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1183,11 +1184,6 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
     }
     if (config->psy_bias_qm_bias > 1 && config->psy_bias_qm_bias != UINT8_DEFAULT) {
         SVT_ERROR("Instance %u: psy-bias-qm-bias must be between 0 and 1\n", channel_number + 1);
-        return_error = EB_ErrorBadParameter;
-    }
-    if (!(config->psy_bias_chroma_q_bias > 0.0 && config->psy_bias_chroma_q_bias <= 1.0) &&
-        config->psy_bias_chroma_q_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: psy-bias-chroma-q-bias must be between 0.001 and 1.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1433,7 +1429,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->variance_boost_strength           = 2;
     config_ptr->variance_octile                   = 5;
     config_ptr->enable_alt_curve                  = FALSE;
-    config_ptr->sharpness                         = 1;
+    config_ptr->sharpness                         = INT8_DEFAULT;
     config_ptr->extended_crf_qindex_offset        = 0;
     config_ptr->qp_scale_compress_strength        = DEFAULT;
     config_ptr->frame_luma_bias                   = 0;
@@ -1465,7 +1461,6 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_mds0_intra_inter_mode_bias = UINT8_DEFAULT;
     config_ptr->psy_bias_inter_mode_bias          = UINT8_DEFAULT;
     config_ptr->psy_bias_qm_bias                  = UINT8_DEFAULT;
-    config_ptr->psy_bias_chroma_q_bias            = DEFAULT;
     config_ptr->high_quality_encode_psy_bias      = DEFAULT;
     config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
@@ -3102,7 +3097,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"lineart-energy-bias", &config_struct->lineart_energy_bias},
         {"texture-energy-bias", &config_struct->texture_energy_bias},
         {"satd-bias", &config_struct->satd_bias},
-        {"psy-bias-chroma-q-bias", &config_struct->psy_bias_chroma_q_bias},
         {"high-quality-encode-psy-bias", &config_struct->high_quality_encode_psy_bias},
         {"high-fidelity-encode-psy-bias", &config_struct->high_fidelity_encode_psy_bias}
     };

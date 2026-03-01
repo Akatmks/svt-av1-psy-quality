@@ -1230,7 +1230,6 @@ typedef struct PictureControlSetInitData {
     uint8_t variance_boost_strength;
     uint8_t variance_octile;
     Bool    enable_alt_curve;
-    int8_t  sharpness;
     double  qp_scale_compress_strength;
     uint8_t frame_luma_bias;
     uint8_t luminance_qp_bias; // alias for frame luma bias

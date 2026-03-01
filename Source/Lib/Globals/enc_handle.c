@@ -1537,7 +1537,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.enable_variance_boost = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.enable_variance_boost;
         input_data.variance_boost_strength = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.variance_boost_strength;
         input_data.variance_octile = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.variance_octile;
-        input_data.sharpness = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.sharpness;
         input_data.qp_scale_compress_strength = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.qp_scale_compress_strength;
         input_data.frame_luma_bias = AOMMAX(enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.frame_luma_bias, enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.luminance_qp_bias);
         input_data.luminance_qp_bias = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.luminance_qp_bias; // alias for frame luma bias
@@ -3962,7 +3961,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.scene_change_detection || scs->vq_ctrls.sharpness_ctrls.scene_transition || scs->lap_rc)
         scs->scd_delay = MAX(scs->scd_delay, 2);
 
-    // `-psy-bias`'s Global
+    // `-psy-bias`s Global
     if ((scs->static_config.lineart_psy_bias >= 3.0 || scs->static_config.texture_psy_bias >= 3.0) &&
         scs->static_config.tx_bias)
         SVT_WARN("lineart-psy-bias / texture-psy-bias is intended to replace tx-bias and not intended to be used together\n");
@@ -4077,12 +4076,15 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.enable_variance_boost = 1;
     }
 
-    if (scs->static_config.psy_bias_chroma_q_bias == DEFAULT)
-        scs->static_config.psy_bias_chroma_q_bias = 1.0;
-
     // `-psy-bias`s MD
+    if (scs->static_config.sharpness == INT8_DEFAULT) {
+        if (scs->static_config.high_fidelity_encode_psy_bias)
+            scs->static_config.sharpness = 4;
+        else
+            scs->static_config.sharpness = 2;
+    }
     if (scs->static_config.psy_bias_mds0_sad == UINT8_DEFAULT) {
-        if (scs->static_config.texture_psy_bias >= 6.0)
+        if (scs->static_config.texture_psy_bias >= 7.0)
             scs->static_config.psy_bias_mds0_sad = 1;
         else
             scs->static_config.psy_bias_mds0_sad = 0;
@@ -4795,7 +4797,6 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_mds0_intra_inter_mode_bias = config_struct->psy_bias_mds0_intra_inter_mode_bias;
     scs->static_config.psy_bias_inter_mode_bias = config_struct->psy_bias_inter_mode_bias;
     scs->static_config.psy_bias_qm_bias = config_struct->psy_bias_qm_bias;
-    scs->static_config.psy_bias_chroma_q_bias = config_struct->psy_bias_chroma_q_bias;
 
     scs->static_config.high_quality_encode_psy_bias = config_struct->high_quality_encode_psy_bias;
     scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;

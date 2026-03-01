@@ -3540,31 +3540,6 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                     }
 
                     int32_t chroma_qindex = frm_hdr->quantization_params.base_q_idx;
-
-                    if (scs->static_config.psy_bias_chroma_q_bias < 1.0) {
-                        if (pcs->ppcs->qp_on_the_fly != TRUE) {
-                            if (scs->enable_qp_scaling_flag) {
-                                if (pcs->ppcs->tpl_ctrls.enable) {
-                                    chroma_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex);
-
-                                    chroma_qindex = svt_av1_get_q_index_from_qstep_ratio(chroma_qindex,
-                                                                                         scs->static_config.psy_bias_chroma_q_bias,
-                                                                                         scs->encoder_bit_depth);
-
-                                    chroma_qindex = crf_qindex_calc(pcs, rc, chroma_qindex);
-                                } else { // if CQP
-                                    chroma_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex);
-
-                                    chroma_qindex = svt_av1_get_q_index_from_qstep_ratio(chroma_qindex,
-                                                                                         scs->static_config.psy_bias_chroma_q_bias,
-                                                                                         scs->encoder_bit_depth);
-
-                                    chroma_qindex = cqp_qindex_calc(pcs, chroma_qindex);
-                                }
-                            }
-                        }
-                    }
-
                     if (frame_is_intra_only(pcs->ppcs)) {
                         chroma_qindex += scs->static_config.key_frame_chroma_qindex_offset;
                     } else {

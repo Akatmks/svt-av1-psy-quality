@@ -76,7 +76,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **TargetSocket**                 | --ss                        | [-1,1]                         | -1          | Specifies which socket to run on, assumes a max of two equally-sized sockets. Refer to Appendix A.1           |
 | **FastDecode**                   | --fast-decode               | [0,2]                          | 0           | Tune settings to output bitstreams that can be decoded faster, [0 = OFF, 1,2 = levels for decode-targeted optimization (2 yields faster decoder speed)]. Defaults to 5 temporal layers structure but may override with --hierarchical-levels |
 | **Tune**                         | --tune                      | [0-4]                          | 0           | Optimize the encoding process for different desired outcomes [0 = VQ, 1 = PSNR, 2 = SSIM, 3 = Subjective SSIM, 4 = Still Picture] |
-| **Sharpness**                    | --sharpness                 | [-7-7]                         | 1           | Bias towards block sharpness in rate-distortion optimization of transform coefficients                        |
+| **Sharpness**                    | --sharpness                 | [-14-14]                       | 2           | Bias towards block sharpness in rate-distortion optimization of transform coefficients                        |
 | **FrameLumaBias**                | --frame-luma-bias           | [0-100]                        | 0           | Adjusts frame-level QP based on average luminance across each frame                                           |
 | **AltSSIMTuning**                | --alt-ssim-tuning           | [0-1]                          | 0           | Enables the usage of VQ optimizations and an alternative SSIM calculation pathway (Only operates with tunes 2 & 4) |
 | **AdaptiveFilmGrain**            | --adaptive-film-grain       | [0,1]                          | 1           | Allows film grain synthesis to be sourced from different block sizes depending on resolution                  |
@@ -119,7 +119,6 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasmds0IntraInterModeBias** | --psy-bias-mds0-intra-inter-mode-bias | [0-1]               | 0           | Bias towards intra mode in base layers, and against intra mode in non base layers                             |
 | **PsyBiasInterModeBias**         | --psy-bias-inter-mode-bias  | [0-5]                          | 0           | Bias against intra mode in non base layers                                                                    |
 | **PsyBiasQMBias**                | --psy-bias-qm-bias          | [0-1]                          | 0           | Increase QM level in frames of higher temporal layer                                                          |
-| **PsyBiasChromaQBias**           | --psy-bias-chroma-q-bias    | [0.001-1.0]                    | 1.0          | Bias chroma q decision. `1.0` disables this feature. Values smaller than `1.0` begins chroma qindex decision from a better `--crf` value than the value specified by `--crf`. This feature is unrelated to the `chroma_qindex` bias enabled at `--lineart-psy-bias [>= 2]` or `--texture-psy-bias [>= 4]` but applied in addition to it. |
 | **HighQualityEncodePsyBias**     | --high-quality-encode-psy-bias | [0-1]                       | 0           | Bias various features for high quality encoding. Check below for more description. [Default to `1` when `--crf [<= 24.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 | **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. Check below for more description. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 
@@ -196,7 +195,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
 | [md] no nic post mds1/2 `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-mds0-sad 1` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overridden |
+| [md] `--psy-bias-mds0-sad 1` | ✕ | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | Can be overridden |
 | [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `--psy-bias-mds0-intra-inter-mode-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
 | [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
@@ -263,13 +262,14 @@ In additional to features in `--high-quality-encode-psy-bias 1`:
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Raise variance threshold from `lineart_variance_thr >> 2` to `lineart_variance_thr >> 1`.  
 * `--psy-bias-disable-me-8x8`: Revert `--lineart-psy-bias [>= 2]` settings back to `0`. Can be overridden.  
+* `--sharpness`: Default changed from `2` to `4`. Can be overridden.  
 * `--ac-bias` and `--texture-ac-bias`: Boost `--texture-psy-bias`'s default for `--ac-bias` and `--texture-ac-bias` by 1.5 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--ac-bias` or `--texture-ac-bias` value.  
 * `--texture-energy-bias`: Boost `--texture-psy-bias`'s default by 2 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--texture-energy-bias` value.  
 * `--satd-bias`: Default changed from `0.00` to `1.00`. Can be overridden.  
 * `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
 * `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
-Additionally, `--balancing-noise-level-q-bias 1.10` or `1.15` which can balance the quality between noisy and static scenes could be beneficial. `--psy-bias-chroma-q-bias 0.6` might also be good to use.  
+Additionally, `--balancing-noise-level-q-bias 1.10` or `1.15` which can balance the quality between noisy and static scenes could be beneficial.  
 
 ## Rate Control Options
 

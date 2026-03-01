@@ -975,9 +975,9 @@ typedef struct EbSvtAv1EncConfiguration {
 
     /**
      * @brief Affects loopfilter deblock sharpness and rate distortion
-     * Min value is -7.
-     * Max is 7.
-     * Default is 1.
+     * Min value is -14.
+     * Max is 14.
+     * Default is 2.
      */
     int8_t sharpness;
 
@@ -1158,7 +1158,6 @@ typedef struct EbSvtAv1EncConfiguration {
     uint8_t psy_bias_mds0_intra_inter_mode_bias;
     uint8_t psy_bias_inter_mode_bias;
     uint8_t psy_bias_qm_bias;
-    double psy_bias_chroma_q_bias;
 
     /**
      * @brief Bias various features for high quality encoding.
@@ -1349,7 +1348,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     // uint8_t padding[128 - 7 * sizeof(Bool) - 14 * sizeof(uint8_t) - 1 * sizeof(int8_t) - sizeof(int32_t) - 2 * sizeof(double)
                     /* exp parameters below */
-                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 12 * sizeof(double)];
+                    // - 2 * sizeof(Bool) - 32 * sizeof(uint8_t) - 9 * sizeof(int8_t) - 2 * sizeof(uint16_t) - sizeof(int32_t) - 11 * sizeof(double)];
 
 } EbSvtAv1EncConfiguration;
 
