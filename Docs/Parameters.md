@@ -256,7 +256,7 @@ Additionally, `--satd-bias 0.5` could potentially encourage the encoder to keep 
 Setting `--high-fidelity-encode-psy-bias 1` sets `--high-quality-encode-psy-bias 1` as well, and cannot be overridden.  
 In additional to features in `--high-quality-encode-psy-bias 1`:  
 
-* `--hierarchical-levels`: Default changed from `5` to `3`. Can be overridden.  
+* `--hierarchical-levels`: Default changed from `5` to `2`. Can be overridden.  
 * `--balancing-luminance-q-bias`: Add an additional `4.0` to the default value of selected `--lineart-psy-bias`, `--texture-psy-bias` level or `--balancing-q-bias 1` default. Does not apply to manually specified `--balancing-luminance-q-bias` value.  
 * `--balancing-luminance-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  
 * `--balancing-texture-lambda-bias`: Default changed from `0.0` to `0.9`. Can be overridden.  

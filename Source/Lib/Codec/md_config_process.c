@@ -302,25 +302,30 @@ static void svt_av1_qm_init(PictureControlSet *pcs) {
                 pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U],
                 pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V]);
 #endif
+    }
 
-        if (pcs->scs->static_config.satd_bias) {
+    if (pcs->scs->static_config.satd_bias) {
+        if (ppcs->frm_hdr.quantization_params.using_qmatrix) {
             memcpy(pcs->satd_bias_qmatrix, ppcs->gqmatrix[ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] >> 2][AOM_PLANE_Y][TX_4X4], 16);
-            QmVal *head = pcs->satd_bias_qmatrix;
-            double *bias_head = satd_bias_qmatrix_bias_4x4;
-            for (uint8_t i = 0; i < 16; i++) {
-                *head = lrint(*head * *bias_head);
-                head++;
-                bias_head++;
-            }
-    
             memcpy(pcs->satd_bias_qmatrix + 16, ppcs->gqmatrix[ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] >> 2][AOM_PLANE_Y][TX_8X8], 64);
-            head = pcs->satd_bias_qmatrix + 16;
-            bias_head = satd_bias_qmatrix_bias_8x8;
-            for (uint8_t i = 0; i < 64; i++) {
-                *head = lrint(*head * *bias_head);
-                head++;
-                bias_head++;
-            }
+        }
+        else {
+            memcpy(pcs->satd_bias_qmatrix, ppcs->gqmatrix[15 >> 2][AOM_PLANE_Y][TX_4X4], 16);
+            memcpy(pcs->satd_bias_qmatrix + 16, ppcs->gqmatrix[15 >> 2][AOM_PLANE_Y][TX_8X8], 64);
+        }
+
+        QmVal *head = pcs->satd_bias_qmatrix;
+        double *bias_head = satd_bias_qmatrix_bias_4x4;
+        for (uint8_t i = 0; i < 16; i++) {
+            *head = lrint(*head * *bias_head);
+            head++;
+            bias_head++;
+        }
+        bias_head = satd_bias_qmatrix_bias_8x8;
+        for (uint8_t i = 0; i < 64; i++) {
+            *head = lrint(*head * *bias_head);
+            head++;
+            bias_head++;
         }
     }
 }

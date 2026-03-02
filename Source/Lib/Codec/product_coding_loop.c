@@ -1034,7 +1034,7 @@ static void fast_loop_core_light_pd0(ModeDecisionCandidateBuffer *cand_bf, Pictu
                                                                effective_ac_bias,
                                                                effective_energy_bias,
                                                                effective_satd_bias,
-                                                               pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL)
+                                                               pcs->satd_bias_qmatrix)
                     << 1;
             }
         }
@@ -4793,7 +4793,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                         effective_ac_bias,
                         effective_energy_bias,
                         effective_satd_bias,
-                        pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                        pcs->satd_bias_qmatrix);
                 }
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_RESIDUAL] =
                     svt_spatial_full_distortion_kernel_facade(input_pic->buffer_y,
@@ -4827,7 +4827,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                         effective_ac_bias,
                         effective_energy_bias,
                         effective_satd_bias,
-                        pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                        pcs->satd_bias_qmatrix);
                 }
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_PREDICTION] <<= 4;
                 txb_full_distortion_txt[DIST_SSD][tx_type][DIST_CALC_RESIDUAL] <<= 4;
@@ -4997,7 +4997,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                 effective_ac_bias,
                 effective_energy_bias,
                 effective_satd_bias,
-                pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                pcs->satd_bias_qmatrix);
 
             txb_full_distortion_txt[DIST_SSIM][tx_type][DIST_CALC_RESIDUAL] <<= 4;
 
@@ -5042,7 +5042,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                                                           effective_ac_bias,
                                                                           effective_energy_bias,
                                                                           effective_satd_bias,
-                                                                          pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                                                                          pcs->satd_bias_qmatrix);
         uint64_t             ssim_residual_dist = svt_spatial_full_distortion_ssim_kernel(input_pic->buffer_y,
                                                                               input_txb_origin_index,
                                                                               input_pic->stride_y,
@@ -5055,7 +5055,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                                                               effective_ac_bias,
                                                                               effective_energy_bias,
                                                                               effective_satd_bias,
-                                                                              pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                                                                              pcs->satd_bias_qmatrix);
         ssim_pred_dist <<= (4 + ctx->mds_subres_step);
         ssim_residual_dist <<= (4 + ctx->mds_subres_step);
 
@@ -5074,7 +5074,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                                                           effective_ac_bias,
                                                                           effective_energy_bias,
                                                                           effective_satd_bias,
-                                                                          pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                                                                          pcs->satd_bias_qmatrix);
         ssim_pred_dist <<= (4 + ctx->mds_subres_step);
 
         y_full_distortion[DIST_SSIM][DIST_CALC_RESIDUAL] +=
@@ -5777,7 +5777,7 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                 effective_ac_bias,
                 effective_energy_bias,
                 effective_satd_bias,
-                pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                pcs->satd_bias_qmatrix);
             y_full_distortion[DIST_SSIM][DIST_CALC_RESIDUAL] = svt_spatial_full_distortion_ssim_kernel(
                 input_pic->buffer_y,
                 input_txb_origin_index,
@@ -5791,7 +5791,7 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                 effective_ac_bias,
                 effective_energy_bias,
                 effective_satd_bias,
-                pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                pcs->satd_bias_qmatrix);
             y_full_distortion[DIST_SSIM][DIST_CALC_PREDICTION] <<= 4;
             y_full_distortion[DIST_SSIM][DIST_CALC_RESIDUAL] <<= 4;
         }
@@ -5826,7 +5826,7 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                                                        effective_ac_bias,
                                                                                        effective_energy_bias,
                                                                                        effective_satd_bias,
-                                                                                       pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                                                                                       pcs->satd_bias_qmatrix);
         }
 
         y_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL] = svt_spatial_full_distortion_kernel_facade(
@@ -5860,7 +5860,7 @@ static void perform_dct_dct_tx(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                                                      effective_ac_bias,
                                                                                      effective_energy_bias,
                                                                                      effective_satd_bias,
-                                                                                     pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL);
+                                                                                     pcs->satd_bias_qmatrix);
         }
         y_full_distortion[DIST_SSD][DIST_CALC_PREDICTION] <<= 4;
         y_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL] <<= 4;

@@ -4832,7 +4832,7 @@ static void copy_api_from_app(
                 : 5;
 
         if (scs->static_config.high_fidelity_encode_psy_bias)
-            scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 3);
+            scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 2);
     }
     if (scs->static_config.pass == ENC_SINGLE_PASS && scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
         if (scs->static_config.hierarchical_levels != 2) {

@@ -2322,7 +2322,7 @@ static void model_rd_for_sb(PictureControlSet *pcs, EbPictureBufferDesc *predict
                                              effective_ac_bias,
                                              effective_energy_bias,
                                              effective_satd_bias,
-                                             pcs->ppcs->frm_hdr.quantization_params.using_qmatrix ? pcs->satd_bias_qmatrix : NULL)
+                                             pcs->satd_bias_qmatrix)
                     << shift;
             }
             break;
