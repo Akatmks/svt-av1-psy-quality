@@ -51,10 +51,9 @@ EbErrorType svt_av1_verify_dlf_bias_max_min_dlf(EbSvtAv1EncConfiguration *source
         target_config->dlf_bias_max_dlf[1] = 2;
     }
     if (target_config->dlf_bias_min_dlf[0] == UINT8_DEFAULT) {
-        if ((source_config->texture_psy_bias >= 3.0 && source_config->texture_psy_bias < 5.0) ||
-            (source_config->texture_psy_bias >= 7.0))
+        if (source_config->high_quality_encode_psy_bias && source_config->texture_psy_bias < 5.0)
             target_config->dlf_bias_min_dlf[0] = 0;
-        else if (source_config->high_quality_encode_psy_bias)
+        else if (source_config->high_fidelity_encode_psy_bias)
             target_config->dlf_bias_min_dlf[0] = 0;
         else
             target_config->dlf_bias_min_dlf[0] = 2;

@@ -209,7 +209,6 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [md] `--psy-bias-inter-mode-bias` | ✕ | ✕ | `1` | `1` | `1` | `2` | `2` | Can be overridden |
 | [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [dlf] `--dlf-bias-max-dlf 6,2` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [dlf] `--dlf-bias-min-dlf 0,0` | ✕ | ✕ | ◯ | ◯ | ✕ | ✕ | ◯ | Can be overridden |
 | [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
@@ -247,7 +246,7 @@ However, apart from this, both parameters have various features such as boosting
 * disable `bypass_md_stage_2` in `--preset 2` and `1`.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Change it from applying only in frames of higher temporals layers to applying to frames of all temporal levels including base frames.  
 * `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
-* `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
+* `--dlf-bias-min-dlf`: Default changed to `0,0` when `--texture-psy-bias [<= 4]`. Can be overridden.  
 
 Additionally, `--satd-bias 0.5` could potentially encourage the encoder to keep certain type of texture and might be useful.  
 
@@ -266,6 +265,7 @@ In additional to features in `--high-quality-encode-psy-bias 1`:
 * `--ac-bias` and `--texture-ac-bias`: Boost `--texture-psy-bias`'s default for `--ac-bias` and `--texture-ac-bias` by 1.5 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--ac-bias` or `--texture-ac-bias` value.  
 * `--texture-energy-bias`: Boost `--texture-psy-bias`'s default by 2 times when `--texture-psy-bias [1 ~ 4]` is used. Does not apply to manually specified `--texture-energy-bias` value.  
 * `--satd-bias`: Default changed from `0.00` to `1.00`. Can be overridden.  
+* `--dlf-bias-min-dlf`: Default changed to `0,0`. Can be overridden.  
 * `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
 * `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
