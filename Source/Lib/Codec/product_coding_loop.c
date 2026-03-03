@@ -6636,36 +6636,47 @@ static INLINE void opt_non_translation_motion_mode(PictureControlSet *pcs, ModeD
         av1_set_ref_frame(rf, cand_bf->cand->ref_frame_type);
         uint8_t list_idx = get_list_idx(rf[0]);
 
-        Mv default_mv     = cand_bf->cand->mv[list_idx];
-        Mv default_ref_mv = cand_bf->cand->pred_mv[list_idx];
+        const Mv                   default_mv           = cand->mv[list_idx];
+        const Mv                   default_ref_mv       = cand->pred_mv[list_idx];
+        const uint8_t              default_drl_idx      = cand->drl_index;
+        const EbWarpedMotionParams default_wm_params    = cand->wm_params_l0;
+        const uint16_t             default_num_proj_ref = cand->num_proj_ref;
 
         motion_mode_valid = ctx->wm_ctrls.refinement_iterations
             ? svt_aom_wm_motion_refinement(
                   pcs, ctx, cand_bf, cand_bf->cand, list_idx, ctx->wm_ctrls.shut_approx_if_not_mds0)
             : 1;
 
-        if (motion_mode_valid) {
+        if (motion_mode_valid && (default_mv.as_int != cand->mv[list_idx].as_int)) {
             MvUnit mv_unit;
-            mv_unit.mv[list_idx]   = cand_bf->cand->mv[list_idx];
+            mv_unit.mv[list_idx]   = cand->mv[list_idx];
             mv_unit.pred_direction = list_idx;
+            // Update wm_params and num_proj_ref for the chosen MV. This call is not
+            // part of a search, so disable the shortcuts.
             svt_aom_warped_motion_parameters(pcs,
                                              ctx->blk_ptr,
                                              &mv_unit,
                                              ctx->blk_geom,
                                              ctx->blk_org_x,
                                              ctx->blk_org_y,
-                                             cand_bf->cand->ref_frame_type,
-                                             &cand_bf->cand->wm_params_l0,
-                                             &cand_bf->cand->num_proj_ref,
-                                             ctx->wm_ctrls.min_neighbour_perc,
-                                             ctx->wm_ctrls.corner_perc_bias,
-                                             ctx->wm_ctrls.lower_band_th,
-                                             ctx->wm_ctrls.upper_band_th,
-                                             ctx->wm_ctrls.shut_approx_if_not_mds0);
-            if (default_mv.as_int != cand_bf->cand->mv[list_idx].as_int) {
-                update_fast_luma_rate(ctx, cand_bf, cand, default_mv, default_ref_mv, list_idx);
-                cand_bf->valid_pred = 0;
-            }
+                                             cand->ref_frame_type,
+                                             &cand->wm_params_l0,
+                                             &cand->num_proj_ref,
+                                             0,
+                                             0,
+                                             0,
+                                             0,
+                                             1);
+
+            update_fast_luma_rate(ctx, cand_bf, cand, default_mv, default_ref_mv, list_idx);
+            cand_bf->valid_pred = 0;
+        } else {
+            // If refined mode was not valid, or the MV was not changed, reset the original settings to proceed with processing the candidate
+            cand->mv[list_idx].as_int      = default_mv.as_int;
+            cand->pred_mv[list_idx].as_int = default_ref_mv.as_int;
+            cand->wm_params_l0             = default_wm_params;
+            cand->num_proj_ref             = default_num_proj_ref;
+            cand->drl_index                = default_drl_idx;
         }
     }
     MdStage obmc_refine_mds = (ctx->obmc_ctrls.refine_level == 1 || ctx->obmc_ctrls.refine_level == 2) ? MD_STAGE_1
@@ -6679,13 +6690,22 @@ static INLINE void opt_non_translation_motion_mode(PictureControlSet *pcs, ModeD
 
         uint8_t list_idx = get_list_idx(rf[0]);
 
-        Mv default_mv     = cand_bf->cand->mv[list_idx];
-        Mv default_ref_mv = cand_bf->cand->pred_mv[list_idx];
+        const Mv      default_mv      = cand_bf->cand->mv[list_idx];
+        const Mv      default_ref_mv  = cand_bf->cand->pred_mv[list_idx];
+        const uint8_t default_drl_idx = cand->drl_index;
 
-        svt_aom_obmc_motion_refinement(pcs, ctx, cand_bf->cand, list_idx, ctx->obmc_ctrls.refine_level);
-        if (default_mv.as_int != cand_bf->cand->mv[list_idx].as_int) {
-            update_fast_luma_rate(ctx, cand_bf, cand, default_mv, default_ref_mv, list_idx);
-            cand_bf->valid_pred = 0;
+        uint8_t motion_mode_valid = svt_aom_obmc_motion_refinement(
+            pcs, ctx, cand_bf->cand, list_idx, ctx->obmc_ctrls.refine_level);
+        if (motion_mode_valid) {
+            if (default_mv.as_int != cand_bf->cand->mv[list_idx].as_int) {
+                update_fast_luma_rate(ctx, cand_bf, cand, default_mv, default_ref_mv, list_idx);
+                cand_bf->valid_pred = 0;
+            }
+        } else {
+            // If refined mode was not valid, reset the original settings to proceed with processing the candidate
+            cand->mv[list_idx].as_int      = default_mv.as_int;
+            cand->pred_mv[list_idx].as_int = default_ref_mv.as_int;
+            cand->drl_index                = default_drl_idx;
         }
     }
 }

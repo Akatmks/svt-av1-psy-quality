@@ -887,6 +887,8 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
         if (scs->lad_mg && (pcs->scs->static_config.tune == 3 ? !svt_aom_frame_is_kf_gf_arf(ppcs) : !frame_is_intra_only(ppcs)) &&
             (ppcs->tpl_group_size < (uint32_t)(2 << pcs->ppcs->hierarchical_levels)))
             weight = MIN(weight + 0.1, 1);
+        if (scs->static_config.high_fidelity_encode_psy_bias && scs->static_config.balancing_q_bias && scs->static_config.hierarchical_levels <= 3)
+            weight = 1.0;
 
         double qstep_ratio;
         if ((int8_t)pcs->temporal_layer_index >= AOMMAX(1, (int8_t)pcs->ppcs->hierarchical_levels + scs->static_config.balancing_r0_dampening_layer))
