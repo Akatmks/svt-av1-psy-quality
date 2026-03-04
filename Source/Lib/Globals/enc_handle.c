@@ -3317,6 +3317,13 @@ static void derive_vq_params(SequenceControlSet* scs) {
         vq_ctrl->stability_ctrls.depth_refinement = 0;
     }
 
+    if (scs->static_config.filtering_noise_detection == 0) {
+        if (scs->static_config.lineart_psy_bias >= 5.0 && scs->static_config.texture_psy_bias < 3.0 &&
+            !scs->static_config.high_quality_encode_psy_bias)
+            scs->static_config.filtering_noise_detection = 4;
+    }
+
+
     switch (scs->static_config.filtering_noise_detection) {
         case 0:
             break;
@@ -4022,8 +4029,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     if (scs->static_config.balancing_luminance_q_bias == UINT8_DEFAULT) {
         if (scs->static_config.balancing_q_bias) {
-            if (scs->static_config.texture_psy_bias >= 6.0)
-                scs->static_config.balancing_luminance_q_bias = 160;
+            if (scs->static_config.texture_psy_bias >= 7.0)
+                scs->static_config.balancing_luminance_q_bias = 140;
             else if (scs->static_config.lineart_psy_bias >= 6.0 ||
                      scs->static_config.texture_psy_bias >= 4.0)
                 scs->static_config.balancing_luminance_q_bias = 120;
@@ -4138,10 +4145,11 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     }
 
     if (scs->static_config.noise_norm_strength == UINT8_DEFAULT) {
-        if (scs->static_config.texture_psy_bias >= 5.0)
-            scs->static_config.noise_norm_strength = 4;
-        else if (scs->static_config.lineart_psy_bias >= 5.0)
+        if (scs->static_config.lineart_psy_bias >= 5.0 &&
+            scs->static_config.texture_psy_bias < 4.0)
             scs->static_config.noise_norm_strength = 0;
+        else if (scs->static_config.texture_psy_bias >= 5.0)
+            scs->static_config.noise_norm_strength = 4;
         else
             scs->static_config.noise_norm_strength = 1;
     }
@@ -4196,7 +4204,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     }
     
     if (scs->static_config.psy_bias_mds0_intra_inter_mode_bias == UINT8_DEFAULT) {
-        if (scs->static_config.texture_psy_bias >= 5.0)
+        if (scs->static_config.texture_psy_bias >= 6.0)
             scs->static_config.psy_bias_mds0_intra_inter_mode_bias = 1;
         else
             scs->static_config.psy_bias_mds0_intra_inter_mode_bias = 0;
@@ -4220,7 +4228,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.cdef_bias = 1;
     }
     if (scs->static_config.dlf_sharpness == UINT8_DEFAULT) {
-        if (scs->static_config.lineart_psy_bias >= 6.0)
+        if (scs->static_config.lineart_psy_bias >= 5.0 &&
+            scs->static_config.texture_psy_bias < 4.0)
             scs->static_config.dlf_sharpness = 7;
         else
             scs->static_config.dlf_sharpness = 1;

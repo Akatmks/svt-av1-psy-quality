@@ -148,7 +148,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] disallow HV4 at p0 or faster | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `--chroma-qm-min 11` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] `--psy-bias-qm-bias 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [md] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
+| [md] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Only applied when `--texture-psy-bias [<= 3.0]`; Can be overridden |
 | [md] use better `pic_obmc_level` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] variance skip taper | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
@@ -158,7 +158,8 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] variance 32x32 blk size bias | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
 | [md] variance 32x32 blk size taper | ✕ | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | |
 | [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [dlf] `--dlf-sharpness 7` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | Can be overridden |
+| [dlf] `--dlf-sharpness 7` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Only applied when `--texture-psy-bias [<= 3.0]`; Can be overridden |
+| [cdef] `--filtering-noise-detection 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Only applied when `--texture-psy-bias [<= 2.0]`; Can be overridden with any value other than `0` |
 | [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | | |
 | [cdef] chroma cdef distortion bias | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
 | [rest] `--psy-bias-disable-sgrproj 1` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
@@ -168,9 +169,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 * `--lineart-psy-bias 4` puts a little bit more focus on weak lineart retention than `--lineart-psy-bias 3`.  
 * `--lineart-psy-bias 5` and above is optimised for weak lineart retention. Some features here trade overall efficiency for better weak lineart retention, such as variance skip taper enabled at `--lineart-psy-bias 6` and variance 32x32 blk size taper enabled at `--lineart-psy-bias 7`.  
 
-A parameter worthy of attention is `--dlf-sharpness 7`. It is only enabled at a high `--lineart-psy-bias 6` level because it's highly clean source specific. Using this on texture heavy or noisy sources will result in a ton of blocking, but on the other hand, it's very, very good on clean source. You should enable this as well as `--noise-norm-strength 0` if you're encoding a clean source no matter what `--lineart-psy-bias` level you use.  
-
-Additionally, `--qm-min` and `--chroma-qm-min` can be adjusted as well for each sources for better quality. Lower `--dlf-bias-max-dlf` and `--cdef-bias-max-cdef` will be helpful on clean sources for better retention as well.  
+Additionally, lower `--dlf-bias-max-dlf` and `--cdef-bias-max-cdef` will potentially be helpful on clean sources for better retention as well.  
 
 Other than the parameters listed here, you can also check out `--satd-bias 0.5`, `--lineart-energy-bias 0.98`, `--balancing-texture-lambda-bias 0.5` and see these parameters would be good for the source as well.  
 
@@ -182,7 +181,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `10.0` | `12.0` | `12.0` | `16.0` | `16.0` | Applied when `--balancing-q-bias 1`; Can be overridden |
+| [rc] `--balancing-luminance-q-bias` | `8.0` | `8.0` | `10.0` | `12.0` | `12.0` | `12.0` | `14.0` | Applied when `--balancing-q-bias 1`; Can be overridden |
 | [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Applied when `--balancing-q-bias 1`; Can be overridden |
 | [rc] `--balancing-tpl-intra-mode-beta-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
@@ -197,7 +196,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [md] no nic post mds1/2 `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `--psy-bias-mds0-sad 1` | ✕ | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | Can be overridden |
 | [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--psy-bias-mds0-intra-inter-mode-bias 1` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | |
+| [md] `--psy-bias-mds0-intra-inter-mode-bias 1` | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `1.0` | `3.0` | `3.0` | `3.0` | Can be overridden |
 | [md] `--texture-ac-bias` | － | － | － | `3.0` | `8.0` | `8.0` | `8.0` | Can be overridden |
@@ -218,6 +217,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 * `--texture-psy-bias 3` puts a little bit of focus on texture, and can be used on sources with occasional texture.  
 * `--texture-psy-bias 4` is suitable for sources with detailed texture. At this level, it starts to harm especially weak lineart in clean sources a little bit, but should still generally be fine for most sources.  
 * `--texture-psy-bias 5` and above is suitabled for encodes where texture retention is a great priority, or when the source is very texture heavy.  
+  Additionally, `--texture-psy-bias 6` and above contains more settings to accommodate noisy sources.  
 
 There are a lot of `-psy-bias` features that're isolated into individually togglable parameters. For example, a properly set `--noise-norm-strength` to the source will help regardless which `--texture-psy-bias` levels you use. If noise in the source is very bad, and you can't perform filtering to stabilise the noise, you might want to increase `--psy-bias-inter-mode-bias`. If entire frame of the source is covered by a layer of texture, then features like `--psy-bias-mds0-intra-inter-mode-bias 1` and `--psy-bias-mds0-sad 1` might become very handy.  
 
@@ -247,6 +247,7 @@ However, apart from this, both parameters have various features such as boosting
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Change it from applying only in frames of higher temporals layers to applying to frames of all temporal levels including base frames.  
 * `--lineart-energy-bias`: Default changed from `1.00` to `0.98`. Can be overridden.  
 * `--dlf-bias-min-dlf`: Default changed to `0,0` when `--texture-psy-bias [<= 4]`. Can be overridden.  
+* `--filtering-noise-detection`: Revert `--lineart-psy-bias [>= 6.0]`'s setting it to `4`. Can be overridden.  
 
 Additionally, `--satd-bias 0.5` could potentially encourage the encoder to keep certain type of texture and might be useful.  
 

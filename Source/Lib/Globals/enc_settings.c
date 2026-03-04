@@ -2785,7 +2785,7 @@ static EbErrorType str_to_texture_psy_bias(const char *nptr, EbSvtAv1EncConfigur
 
     if (return_error == EB_ErrorBadParameter) {
         if (!strcmp(nptr, "cat")) {
-            config_struct->texture_psy_bias = 5.0;
+            config_struct->texture_psy_bias = 6.0;
             config_struct->texture_psy_bias_easter_egg = 1;
             return_error = EB_ErrorNone;
         }
