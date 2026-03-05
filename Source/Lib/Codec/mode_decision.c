@@ -786,20 +786,17 @@ Bool svt_aom_is_valid_unipred_ref(struct ModeDecisionContext *ctx, uint8_t inter
     }
 }
 // Determine if the MV-to-MVP difference satisfies the mv_diff restriction
-static Bool is_valid_mv_diff(IntMv best_pred_mv[2], Mv mv0, Mv mv1, uint8_t is_compound,
-                             uint8_t allow_high_precision_mv) {
-    uint8_t mv_diff_max_bit = 14 + (allow_high_precision_mv ? 1 : 0);
+static bool is_valid_mv_diff(IntMv best_pred_mv[2], Mv mv0, Mv mv1, uint8_t is_compound) {
+    const uint8_t mv_diff_max_bit = MV_IN_USE_BITS;
+
+    if (abs(mv0.x - best_pred_mv[0].as_mv.col) > (1 << mv_diff_max_bit) ||
+        abs(mv0.y - best_pred_mv[0].as_mv.row) > (1 << mv_diff_max_bit)) {
+        return FALSE;
+    }
 
     if (is_compound) {
-        if (ABS(mv0.x - best_pred_mv[0].as_mv.col) > (1 << mv_diff_max_bit) ||
-            ABS(mv0.y - best_pred_mv[0].as_mv.row) > (1 << mv_diff_max_bit) ||
-            ABS(mv1.x - best_pred_mv[1].as_mv.col) > (1 << mv_diff_max_bit) ||
-            ABS(mv1.y - best_pred_mv[1].as_mv.row) > (1 << mv_diff_max_bit)) {
-            return FALSE;
-        }
-    } else {
-        if (ABS(mv0.x - best_pred_mv[0].as_mv.col) > (1 << mv_diff_max_bit) ||
-            ABS(mv0.y - best_pred_mv[0].as_mv.row) > (1 << mv_diff_max_bit)) {
+        if (abs(mv1.x - best_pred_mv[1].as_mv.col) > (1 << mv_diff_max_bit) ||
+            abs(mv1.y - best_pred_mv[1].as_mv.row) > (1 << mv_diff_max_bit)) {
             return FALSE;
         }
     }
@@ -1015,7 +1012,7 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs, PictureCont
                                                     &drl_index,
                                                     best_pred_mv);
                     if (!ctx->corrupted_mv_check ||
-                        is_valid_mv_diff(best_pred_mv, to_inj_mv, to_inj_mv, 0, frm_hdr->allow_high_precision_mv)) {
+                        is_valid_mv_diff(best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
                         const uint8_t is_ii_allowed = svt_is_interintra_allowed(ctx->inter_intra_comp_ctrls.enabled,
                                                                                 ctx->blk_geom->bsize,
                                                                                 NEWMV,
@@ -1182,8 +1179,7 @@ static void bipred_3x3_candidates_injection(const SequenceControlSet *scs, Pictu
                                 is_valid_mv_diff(best_pred_mv,
                                                  to_inj_mv0,
                                                  to_inj_mv1,
-                                                 1,
-                                                 pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                                                 1)) {
                                 ctx->cmp_store.pred0_cnt = 0;
                                 ctx->cmp_store.pred1_cnt = 0;
                                 Bool mask_done           = 0;
@@ -1299,8 +1295,7 @@ static void bipred_3x3_candidates_injection(const SequenceControlSet *scs, Pictu
                                 is_valid_mv_diff(best_pred_mv,
                                                  to_inj_mv0,
                                                  to_inj_mv1,
-                                                 1,
-                                                 pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                                                 1)) {
                                 ctx->cmp_store.pred0_cnt = 0;
                                 ctx->cmp_store.pred1_cnt = 0;
                                 Bool mask_done           = 0;
@@ -2372,7 +2367,7 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext
 
     // Check that final chosen MV is valid
     if (!ctx->corrupted_mv_check ||
-        is_valid_mv_diff(best_pred_mv, best_mv, best_mv, 0, ppcs->frm_hdr.allow_high_precision_mv)) {
+        is_valid_mv_diff(best_pred_mv, best_mv, best_mv, 0)) {
         int umv0_tile   = derive_rmv_setting(pcs->scs, ppcs);
         int inside_tile = 1;
         if (umv0_tile) {
@@ -2629,8 +2624,7 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, struct ModeDecisi
         is_valid_mv_diff(best_pred_mv,
                          cand->mv[ref_list_idx],
                          cand->mv[ref_list_idx],
-                         0,
-                         pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                         0)) {
         int umv0_tile   = derive_rmv_setting(pcs->scs, pcs->ppcs);
         int inside_tile = 1;
         if (umv0_tile) {
@@ -2795,7 +2789,7 @@ static void inject_new_candidates_light_pd1(PictureControlSet *pcs, struct ModeD
                                                 best_pred_mv);
                 if (!ctx->corrupted_mv_check ||
                     is_valid_mv_diff(
-                        best_pred_mv, to_inj_mv, to_inj_mv, 0, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                        best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
                     cand_array[cand_total_cnt].skip_mode_allowed      = FALSE;
                     cand_array[cand_total_cnt].cand_skip_taper_active = ctx->blk_skip_taper_active;
                     cand_array[cand_total_cnt].pred_mode              = NEWMV;
@@ -2841,7 +2835,7 @@ static void inject_new_candidates_light_pd1(PictureControlSet *pcs, struct ModeD
                                                     best_pred_mv);
                     if (!ctx->corrupted_mv_check ||
                         is_valid_mv_diff(
-                            best_pred_mv, to_inj_mv, to_inj_mv, 0, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                            best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
                         cand_array[cand_total_cnt].skip_mode_allowed      = FALSE;
                         cand_array[cand_total_cnt].cand_skip_taper_active = ctx->blk_skip_taper_active;
                         cand_array[cand_total_cnt].pred_mode              = NEWMV;
@@ -2894,7 +2888,7 @@ static void inject_new_candidates_light_pd1(PictureControlSet *pcs, struct ModeD
                                                     best_pred_mv);
                     if (!ctx->corrupted_mv_check ||
                         is_valid_mv_diff(
-                            best_pred_mv, to_inj_mv0, to_inj_mv1, 1, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                            best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
                         cand_array[cand_total_cnt].skip_mode_allowed      = FALSE;
                         cand_array[cand_total_cnt].cand_skip_taper_active = ctx->blk_skip_taper_active;
                         cand_array[cand_total_cnt].drl_index              = drl_index;
@@ -2987,7 +2981,7 @@ static void inject_new_candidates(const SequenceControlSet *scs, struct ModeDeci
                                                 best_pred_mv);
                 if (!ctx->corrupted_mv_check ||
                     is_valid_mv_diff(
-                        best_pred_mv, to_inj_mv, to_inj_mv, 0, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                        best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
                     const uint8_t is_ii_allowed = svt_is_interintra_allowed(
                                                       ctx->inter_intra_comp_ctrls.enabled,
                                                       bsize,
@@ -3091,7 +3085,7 @@ static void inject_new_candidates(const SequenceControlSet *scs, struct ModeDeci
                                                         best_pred_mv);
                         if (!ctx->corrupted_mv_check ||
                             is_valid_mv_diff(
-                                best_pred_mv, to_inj_mv0, to_inj_mv1, 1, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                                best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
                             ctx->cmp_store.pred0_cnt = 0;
                             ctx->cmp_store.pred1_cnt = 0;
                             Bool mask_done           = 0;
@@ -3375,7 +3369,7 @@ static void inject_pme_candidates(
                                                     best_pred_mv);
                     if (!ctx->corrupted_mv_check ||
                         is_valid_mv_diff(
-                            best_pred_mv, to_inj_mv, to_inj_mv, 0, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                            best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
                         const uint8_t is_ii_allowed = svt_is_interintra_allowed(
                                                           ctx->inter_intra_comp_ctrls.enabled, bsize, NEWMV, rf) &&
                             svt_aom_is_valid_unipred_ref(ctx, INTER_INTRA_GROUP, list_idx, ref_idx);
@@ -3463,7 +3457,7 @@ static void inject_pme_candidates(
                                                         best_pred_mv);
                         if (!ctx->corrupted_mv_check ||
                             is_valid_mv_diff(
-                                best_pred_mv, to_inj_mv0, to_inj_mv1, 1, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+                                best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
                             ctx->cmp_store.pred0_cnt = 0;
                             ctx->cmp_store.pred1_cnt = 0;
                             Bool mask_done           = 0;
@@ -4039,7 +4033,7 @@ static void inject_zz_backup_candidate(
         0,
         &cand_array[cand_total_cnt].drl_index,
         best_pred_mv);
-    if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, (Mv) { {0, 0} }, (Mv) { {0, 0} }, 0, pcs->ppcs->frm_hdr.allow_high_precision_mv)) {
+    if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, (Mv) { {0, 0} }, (Mv) { {0, 0} }, 0)) {
     cand_array[cand_total_cnt].use_intrabc = 0;
     cand_array[cand_total_cnt].skip_mode_allowed = FALSE;
     cand_array[cand_total_cnt].cand_skip_taper_active = ctx->blk_skip_taper_active;

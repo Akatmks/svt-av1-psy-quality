@@ -6489,13 +6489,13 @@ static void full_loop_core_light_pd1(PictureControlSet *pcs, ModeDecisionContext
 
         perform_chroma = chroma_component > COMPONENT_LUMA;
 
-        if (chroma_component == COMPONENT_CHROMA_CB) {
+        if (chroma_component == COMPONENT_CHROMA_CB || chroma_component == COMPONENT_LUMA) {
             cr_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL]   = 0;
             cr_full_distortion[DIST_SSD][DIST_CALC_PREDICTION] = 0;
             cr_coeff_bits                                      = 0;
             cand_bf->v_has_coeff                               = 0;
             cand_bf->eob.v[0]                                  = 0;
-        } else if (chroma_component == COMPONENT_CHROMA_CR) {
+        } else if (chroma_component == COMPONENT_CHROMA_CR || chroma_component == COMPONENT_LUMA) {
             cb_full_distortion[DIST_SSD][DIST_CALC_RESIDUAL]   = 0;
             cb_full_distortion[DIST_SSD][DIST_CALC_PREDICTION] = 0;
             cb_coeff_bits                                      = 0;
@@ -9371,6 +9371,9 @@ static void md_encode_block(PictureControlSet *pcs, ModeDecisionContext *ctx, ui
     // Search for the best independent intra chroma mode if search is enabled to be done before MDS0
     if (ctx->uv_ctrls.uv_mode == CHROMA_MODE_0 && !ctx->uv_ctrls.ind_uv_last_mds && ctx->blk_geom->sq_size < 128 &&
         ctx->blk_geom->has_uv) {
+        // Set MD stage to 0 to avoid using TX shortcuts in chroma transform path that are
+        // meant to be based on luma TX data, which is not available
+        ctx->md_stage = MD_STAGE_0;
         search_best_independent_uv_mode(pcs,
                                         input_pic,
                                         loc.input_cb_origin_in_index,
