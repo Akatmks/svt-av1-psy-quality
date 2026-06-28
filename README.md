@@ -1,5 +1,7 @@
 ## svt-av1-psy-quality
 
+5fish/SVT-AV1 (originally 5fish/svt-av1-psy) builds are now moving to official 5fish/SVT-AV1 GitHub Releases: https://github.com/5fish/SVT-AV1/releases  
+
 This repository provides optimised Windows builds for all your favourite SVT-AV1 derived encoders, currently 5fish/SVT-AV1-PSY and SVT-AV1-Essential. Our builds include the newest features, including those are still in the pull request stage and are not yet merged to the testing branch.  
 
 Head to [releases](../../releases) for the builds we're offering.  
