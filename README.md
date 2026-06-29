@@ -1,9 +1,10 @@
-## svt-av1-psy-quality
+## SVT-AV1-Builds
 
-5fish/SVT-AV1 (originally 5fish/svt-av1-psy) builds are now moving to official 5fish/SVT-AV1 GitHub Releases: https://github.com/5fish/SVT-AV1/releases  
+We're currently restructing this repository!  
 
-This repository provides optimised Windows builds for all your favourite SVT-AV1 derived encoders, currently 5fish/SVT-AV1-PSY and SVT-AV1-Essential. Our builds include the newest features, including those are still in the pull request stage and are not yet merged to the testing branch.  
+Previously we've been providing 5fish/SVT-AV1, SVT-AV1-HDR and SVT-AV1-Essential builds manually.  
+But now thanks to everybody in the community, we are finally able to make a script to do PGO builds fully automatically, and produce builds that's within 1% of the best manual builds.  
 
-Head to [releases](../../releases) for the builds we're offering.  
-
-We're also actively looking for ways to improve encoding quality. We include these new features from ourselves into the builds as well. However, we don't intend this repository to be a standalone „fork“. Once we believe a new feature is working, we intend to create pull requests to upstream forks and get it merged.  
+This new PGO building script has been adopted by 5fish/SVT-AV1, and now 5fish/SVT-AV1 builds are available at official 5fish/SVT-AV1 GitHub Releases: https://github.com/5fish/SVT-AV1/releases  
+We're currently fitting this new script to SVT-AV1-HDR as well, and you should see it happening probably within the next week.  
+After that, we'll set up this repository itself to provide automatic mainline SVT-AV1 builds for the people who needs it. Although we'll start to provide mainline builds, we still recommend you to use these forks as these forks produce much better encodes than mainline.  
