@@ -30,7 +30,7 @@ jobs:
     needs: tag
     runs-on: "ubuntu-latest"
     outputs:
-      release: ${{ steps.check-tag.outputs == 'failure' }}
+      release: ${{ steps.check-tag.outcome == 'failure' }}
     steps:
     - uses: actions/checkout@v7
       with:
