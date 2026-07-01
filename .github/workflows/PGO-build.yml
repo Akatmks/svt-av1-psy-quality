@@ -32,13 +32,8 @@ jobs:
     outputs:
       release: ${{ steps.check-tag.outputs == 'failure' }}
     steps:
-    - uses: actions/checkout@v7
-      with:
-        ref: "refs/heads/pgo-build-tags"
-        fetch-depth: 0
-        fetch-tags: true
     - id: check-tag
-      run: git tag -l ${{ needs.tag.outputs.tag }}
+      run: git ls-remote --exit-code origin --tags ${{ needs.tag.outputs.tag }}
       continue-on-error: true
     - run: git config user.email Akatsumekusa@protonmail.com && git config user.name "Akatsumekusa"
       if: ${{ steps.check-tag.outcome == 'failure' }}
