@@ -15,7 +15,7 @@ jobs:
     outputs:
       tag: ${{ steps.generate-tag.outputs.tag }}
       name: ${{ steps.generate-name.outputs.name }}
-      sha: ${{ steps.generate-name.outputs.sha }}
+      sha: ${{ steps.generate-sha.outputs.sha }}
     steps:
     - run: git clone --depth 1 https://gitlab.com/AOMediaCodec/SVT-AV1.git .
     - id: generate-tag
@@ -30,7 +30,7 @@ jobs:
     needs: tag
     runs-on: "ubuntu-latest"
     outputs:
-      release: ${{ steps.check-tag.outcome == 'failure' }}
+      check-tag: ${{ steps.check-tag.outcome }}
     steps:
     - uses: actions/checkout@v7
       with:
@@ -76,7 +76,7 @@ jobs:
   # TODO: Test and migrate to MCF Gthread.
   build-windows-x86-64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release == true }}
+    if: ${{ needs.release.outputs.check-tag == 'failure' }}
     runs-on: "windows-latest"
     defaults:
       run:
@@ -155,7 +155,7 @@ jobs:
 
   build-windows-arm64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release == true }}
+    if: ${{ needs.release.outputs.check-tag == 'failure' }}
     runs-on: "windows-11-arm"
     defaults:
       run:
@@ -262,7 +262,7 @@ jobs:
   # ```
   build-linux-x86-64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release == true }}
+    if: ${{ needs.release.outputs.check-tag == 'failure' }}
     runs-on: "ubuntu-latest"
     steps:
     - uses: ConorMacBride/install-package@v1
@@ -315,7 +315,7 @@ jobs:
   # For some reason `-flto=full` is broken and fails the linking, so using `-DSVT_AV1_LTO=ON` for now.  
   build-macos-arm64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release == true }}
+    if: ${{ needs.release.outputs.check-tag == 'failure' }}
     runs-on: "macos-latest"
     steps:
     - uses: ConorMacBride/install-package@v1
@@ -342,7 +342,7 @@ jobs:
 
   build-macos-x86-64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release == true }}
+    if: ${{ needs.release.outputs.check-tag == 'failure' }}
     runs-on: "macos-26-intel"
     steps:
     - uses: ConorMacBride/install-package@v1
