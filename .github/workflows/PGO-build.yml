@@ -78,7 +78,7 @@ jobs:
   # TODO: Test and migrate to MCF Gthread.
   build-windows-x86-64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release }}
+    if: ${{ needs.release.outputs.release == true }}
     runs-on: "windows-latest"
     defaults:
       run:
@@ -157,7 +157,7 @@ jobs:
 
   build-windows-arm64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release }}
+    if: ${{ needs.release.outputs.release == true }}
     runs-on: "windows-11-arm"
     defaults:
       run:
@@ -264,7 +264,7 @@ jobs:
   # ```
   build-linux-x86-64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release }}
+    if: ${{ needs.release.outputs.release == true }}
     runs-on: "ubuntu-latest"
     steps:
     - uses: ConorMacBride/install-package@v1
@@ -317,7 +317,7 @@ jobs:
   # For some reason `-flto=full` is broken and fails the linking, so using `-DSVT_AV1_LTO=ON` for now.  
   build-macos-arm64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release }}
+    if: ${{ needs.release.outputs.release == true }}
     runs-on: "macos-latest"
     steps:
     - uses: ConorMacBride/install-package@v1
@@ -344,7 +344,7 @@ jobs:
 
   build-macos-x86-64:
     needs: [tag, release]
-    if: ${{ needs.release.outputs.release }}
+    if: ${{ needs.release.outputs.release == true }}
     runs-on: "macos-26-intel"
     steps:
     - uses: ConorMacBride/install-package@v1
